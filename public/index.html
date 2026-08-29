@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>𝐒𝐔𝐏𝐑𝐄𝐌𝐀𝐂𝐘_𝐒𝐏𝐗 – Pair</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #0b0a0f;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 30% 40%, rgba(120, 0, 255, 0.15), transparent 60%),
+                        radial-gradient(circle at 70% 60%, rgba(255, 0, 200, 0.1), transparent 60%);
+            animation: bgPulse 8s ease-in-out infinite alternate;
+            z-index: -1;
+        }
+        @keyframes bgPulse {
+            0% { transform: scale(1) rotate(0deg); }
+            100% { transform: scale(1.1) rotate(3deg); }
+        }
+        .pair-card {
+            max-width: 480px;
+            width: 100%;
+            background: rgba(20, 18, 26, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 40px;
+            padding: 40px 30px 45px;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.8), 0 0 60px rgba(168, 85, 247, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .pair-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.9), 0 0 80px rgba(168, 85, 247, 0.3);
+        }
+        .logo-wrapper { position: relative; margin-bottom: 20px; }
+        .logo-wrapper::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #a855f7, #7c3aed, transparent);
+            border-radius: 100%;
+            filter: blur(2px);
+        }
+        .logo-img {
+            width: 100%;
+            max-height: 180px;
+            object-fit: cover;
+            border-radius: 24px;
+            border: 2px solid rgba(168, 85, 247, 0.2);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s ease;
+        }
+        .logo-img:hover { transform: scale(1.02); }
+        .bot-name {
+            font-size: 32px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            background: linear-gradient(135deg, #c084fc, #a855f7, #6b21a8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 4px;
+            text-shadow: 0 0 30px rgba(168, 85, 247, 0.3);
+        }
+        .sub-title {
+            color: #9ca3af;
+            font-size: 14px;
+            font-weight: 400;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 28px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 16px;
+        }
+        .status-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #22c55e;
+            margin-right: 8px;
+            box-shadow: 0 0 15px rgba(34, 197, 94, 0.6);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.8); }
+        }
+        .status-text { color: #9ca3af; font-size: 13px; letter-spacing: 1px; }
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            margin-top: 24px;
+            margin-bottom: 24px;
+        }
+        .input-group label {
+            color: #d1d5db;
+            font-size: 14px;
+            font-weight: 500;
+            text-align: left;
+            letter-spacing: 0.3px;
+        }
+        .input-group .phone-wrap {
+            display: flex;
+            align-items: center;
+            background: rgba(31, 27, 46, 0.8);
+            border-radius: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            overflow: hidden;
+        }
+        .input-group .phone-wrap:focus-within {
+            border-color: #a855f7;
+            box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.15);
+        }
+        .input-group .phone-wrap i {
+            color: #6b7280;
+            padding: 0 16px;
+            font-size: 18px;
+        }
+        .input-group .phone-wrap input {
+            width: 100%;
+            padding: 18px 16px 18px 0;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #f3f4f6;
+            font-size: 18px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+        .input-group .phone-wrap input::placeholder {
+            color: #4b5563;
+            font-weight: 400;
+            font-size: 15px;
+        }
+        .pair-btn {
+            width: 100%;
+            padding: 18px 20px;
+            background: linear-gradient(135deg, #a855f7, #7c3aed);
+            border: none;
+            border-radius: 18px;
+            color: #fff;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 30px rgba(168, 85, 247, 0.3);
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+        .pair-btn::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .pair-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 40px rgba(168, 85, 247, 0.5);
+        }
+        .pair-btn:hover::after { opacity: 1; }
+        .pair-btn:active { transform: scale(0.97); }
+        .pair-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .pair-btn i { font-size: 20px; }
+        .result-box {
+            margin-top: 28px;
+            padding: 24px 20px;
+            background: rgba(26, 22, 37, 0.9);
+            border-radius: 20px;
+            border: 1px solid rgba(168, 85, 247, 0.15);
+            display: none;
+            animation: fadeSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .result-box.show { display: block; }
+        @keyframes fadeSlideUp {
+            0% { opacity: 0; transform: translateY(30px) scale(0.95); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .result-box .code-label {
+            color: #9ca3af;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+        .result-box .pairing-code {
+            font-size: 40px;
+            font-weight: 800;
+            letter-spacing: 8px;
+            color: #c084fc;
+            font-family: 'Courier New', monospace;
+            background: rgba(15, 13, 23, 0.8);
+            padding: 14px 20px;
+            border-radius: 16px;
+            display: inline-block;
+            border: 1px solid rgba(168, 85, 247, 0.2);
+            margin-top: 4px;
+            box-shadow: 0 0 30px rgba(168, 85, 247, 0.1);
+        }
+        .result-box .instructions {
+            color: #9ca3af;
+            font-size: 14px;
+            margin-top: 16px;
+            line-height: 1.7;
+        }
+        .result-box .instructions strong { color: #e5e7eb; }
+        .error-msg {
+            color: #f87171;
+            font-size: 14px;
+            margin-top: 12px;
+            display: none;
+            padding: 12px;
+            background: rgba(248, 113, 113, 0.1);
+            border-radius: 12px;
+            border: 1px solid rgba(248, 113, 113, 0.2);
+        }
+        .error-msg.show { display: block; }
+        .footer {
+            margin-top: 30px;
+            color: #4b5563;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
+            padding-top: 18px;
+        }
+        .footer a { color: #8b5cf6; text-decoration: none; font-weight: 600; }
+        .footer a:hover { text-decoration: underline; }
+        @media (max-width: 480px) {
+            .pair-card { padding: 28px 18px 30px; border-radius: 28px; }
+            .bot-name { font-size: 24px; }
+            .result-box .pairing-code { font-size: 30px; letter-spacing: 4px; padding: 10px 14px; }
+            .input-group .phone-wrap input { font-size: 16px; padding: 14px 12px 14px 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="pair-card">
+        <div class="logo-wrapper">
+            <img class="logo-img" src="https://i.imgur.com/90O9xAC.jpeg" alt="𝐒𝐔𝐏𝐑𝐄𝐌𝐀𝐂𝐘_𝐒𝐏𝐗">
+        </div>
+        <div class="bot-name">𝐒𝐔𝐏𝐑𝐄𝐌𝐀𝐂𝐘_𝐒𝐏𝐗</div>
+        <div class="sub-title">
+            <span class="status-dot"></span>
+            <span class="status-text">Live & Active</span>
+        </div>
+        <form id="pairForm" class="input-group">
+            <label for="phoneInput">
+                <i class="fas fa-phone-alt" style="color: #a855f7; margin-right: 8px;"></i>
+                Enter WhatsApp Number
+            </label>
+            <div class="phone-wrap">
+                <i class="fas fa-globe"></i>
+                <input type="tel" id="phoneInput" placeholder="254700000000" required autocomplete="tel" inputmode="numeric">
+            </div>
+            <button type="submit" class="pair-btn" id="pairBtn">
+                <i class="fas fa-link"></i> Get Pairing Code
+            </button>
+            <div id="errorMsg" class="error-msg"></div>
+        </form>
+        <div id="resultBox" class="result-box">
+            <div class="code-label">✦ Your Pairing Code ✦</div>
+            <div id="pairingCodeDisplay" class="pairing-code">————</div>
+            <div class="instructions">
+                <strong>📱 How to use:</strong><br>
+                1. Open WhatsApp → Settings → Linked Devices → Link a Device<br>
+                2. Tap <strong>"Link with phone number"</strong><br>
+                3. Enter the code above
+            </div>
+        </div>
+        <div class="footer">
+            Powered by <a href="#">𝐒𝐔𝐏𝐑𝐄𝐌𝐀𝐂𝐘_𝐒𝐏𝐗</a> &bull; Secure &bull; Fast
+        </div>
+    </div>
+    <script>
+        (function() {
+            const form = document.getElementById('pairForm');
+            const phoneInput = document.getElementById('phoneInput');
+            const resultBox = document.getElementById('resultBox');
+            const codeDisplay = document.getElementById('pairingCodeDisplay');
+            const errorMsg = document.getElementById('errorMsg');
+            const pairBtn = document.getElementById('pairBtn');
+
+            phoneInput.addEventListener('input', function() {
+                this.value = this.value.replace(/\D/g, '');
+            });
+
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                resultBox.classList.remove('show');
+                errorMsg.classList.remove('show');
+                errorMsg.textContent = '';
+                const raw = phoneInput.value.trim();
+                if (!raw) {
+                    showError('⚠️ Please enter your WhatsApp number.');
+                    phoneInput.focus();
+                    return;
+                }
+                const phone = raw.replace(/\D/g, '');
+                if (phone.length < 10) {
+                    showError('⚠️ Enter a valid number with country code (e.g., 254700000000).');
+                    phoneInput.focus();
+                    return;
+                }
+                pairBtn.disabled = true;
+                pairBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+                try {
+                    const response = await fetch('/api/pair', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ phone })
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        codeDisplay.textContent = data.code;
+                        resultBox.classList.add('show');
+                    } else {
+                        showError('❌ ' + (data.error || 'Could not generate code. Try again.'));
+                    }
+                } catch (err) {
+                    console.error(err);
+                    showError('❌ Could not connect to the bot. Make sure it\'s running.');
+                }
+                pairBtn.disabled = false;
+                pairBtn.innerHTML = '<i class="fas fa-link"></i> Get Pairing Code';
+            });
+
+            function showError(msg) {
+                errorMsg.textContent = msg;
+                errorMsg.classList.add('show');
+            }
+
+            phoneInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    form.dispatchEvent(new Event('submit'));
+                }
+            });
+        })();
+    </script>
+</body>
+</html>
