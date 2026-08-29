@@ -4,10 +4,6 @@
 
 const { DisconnectReason } = require("@whiskeysockets/baileys");
 const config = require("../config");
-const { getSessionId } = require("../utils/session");
-const { sendStylishSuccessMessage } = require("../utils/message"); // we'll create this later
-const fs = require("fs");
-const path = require("path");
 
 let paired = false;
 let connected = false;
@@ -18,7 +14,7 @@ module.exports = function registerConnectionHandler(sock, startBot, commands) {
         const { connection, lastDisconnect } = update;
 
         // ─── PAIRING ──────────────────────────
-        if (connection === "connecting" && !paired) {
+        if (connection === "connecting" && !paired && !sock.authState?.creds?.registered) {
             try {
                 await new Promise(r => setTimeout(r, 3000));
                 const code = await sock.requestPairingCode(config.OWNER_NUMBER);
@@ -60,7 +56,9 @@ module.exports = function registerConnectionHandler(sock, startBot, commands) {
                     await sock.groupAcceptInvite(config.AUTO_JOIN_GROUP);
                     console.log("✅ Auto-joined group");
                 }
-            } catch (e) {}
+            } catch (e) {
+                console.log("❌ Auto-join group failed:", e.message);
+            }
 
             // ─── AUTO-FOLLOW CHANNEL ────────────────
             try {
@@ -68,7 +66,9 @@ module.exports = function registerConnectionHandler(sock, startBot, commands) {
                     await sock.newsletterFollow(config.AUTO_FOLLOW_CHANNEL + "@newsletter");
                     console.log("✅ Auto-followed channel");
                 }
-            } catch (e) {}
+            } catch (e) {
+                console.log("❌ Auto-follow channel failed:", e.message);
+            }
         }
 
         // ─── CLOSE ──────────────────────────
@@ -76,9 +76,13 @@ module.exports = function registerConnectionHandler(sock, startBot, commands) {
             const code = lastDisconnect?.error?.output?.statusCode;
             if (code === DisconnectReason.loggedOut) {
                 console.log("❌ Logged out. Clear SESSION_ID and restart.");
+                connected = false;
+                paired = false;
+                return; // don't attempt to restart on a genuine logout
             }
             if (code !== 401) {
                 console.log("❌ Closed, restart in 5s");
+                connected = false;
                 setTimeout(startBot, 5000);
             }
         }
