@@ -14,6 +14,16 @@ const registerMessageHandler = require("./events/messages");
 const registerCallHandler = require("./events/calls");
 const registerGroupHandler = require("./events/group");
 
+// ─── LOAD MEDIA DEPENDENCIES (GLOBAL ACCESS) ──
+// These are required here so the commands folder can use them without crashing
+const ytdl = require("@zorner/ytdl-core");
+const sharp = require("sharp");
+const ffmpeg = require("@ffmpeg-installer/ffmpeg");
+
+global.ytdl = ytdl;
+global.sharp = sharp;
+global.ffmpegPath = ffmpeg.path;
+
 // ─── RESTORE SESSION ──────────────────────────
 restoreSession();
 
