@@ -28,4 +28,41 @@ function getSpeed() {
     return (Date.now() % 1000) + " ms";
 }
 
-module.exports = { formatUptime, getRAMUsage, getSpeed };
+/**
+ * Animates a message by sending one initial message, then editing it
+ * repeatedly to show progress frames — avoids spamming multiple messages.
+ *
+ * @param {object} sock - Baileys socket instance
+ * @param {string} from - JID to send to
+ * @param {string[]} frames - Array of text frames to show in sequence
+ * @param {number} delayMs - Delay between frames in milliseconds
+ * @returns {object|null} The sent message key info (from the first send), or null if it failed
+ */
+async function animateMessage(sock, from, frames, delayMs = 500) {
+    if (!Array.isArray(frames) || frames.length === 0) return null;
+
+    let sent;
+    try {
+        sent = await sock.sendMessage(from, { text: frames[0] });
+    } catch (e) {
+        console.log("❌ animateMessage: failed to send initial frame:", e.message);
+        return null;
+    }
+
+    for (let i = 1; i < frames.length; i++) {
+        await new Promise(r => setTimeout(r, delayMs));
+        try {
+            await sock.sendMessage(from, {
+                text: frames[i],
+                edit: sent.key
+            });
+        } catch (e) {
+            console.log("⚠️ animateMessage: edit failed, stopping animation early:", e.message);
+            break;
+        }
+    }
+
+    return sent;
+}
+
+module.exports = { formatUptime, getRAMUsage, getSpeed, animateMessage };
