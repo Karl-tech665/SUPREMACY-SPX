@@ -1,54 +1,63 @@
-const { default: makeWASocket, useMultiFileAuthState, DisconnectReason } = require("@whiskeysockets/baileys");
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 🤖 𝐒𝐔𝐏𝐑𝐄𝐌𝐀𝐂𝐘_𝐒𝐏𝐗 – MAIN ENTRY
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+const { default: makeWASocket, useMultiFileAuthState } = require("@whiskeysockets/baileys");
+const path = require("path");
 const pino = require("pino");
 const config = require("./config");
+const { restoreSession } = require("./utils/session");
+const { loadCommands } = require("./utils/commandLoader");
+const registerConnectionHandler = require("./events/connection");
+const registerMessageHandler = require("./events/messages");
+const registerCallHandler = require("./events/calls");
+const registerGroupHandler = require("./events/group");
 
-let paired = false;
+// ─── RESTORE SESSION ──────────────────────────
+restoreSession();
 
-async function startBot() {
-    const { state, saveCreds } = await useMultiFileAuthState(config.SESSION_DIR);
+// ─── LOAD COMMANDS ────────────────────────────
+const commandsPath = path.join(__dirname, "commands");
+const commands = loadCommands(commandsPath);
+console.log("📦 Loaded " + Object.keys(commands).length + " commands");
 
-    const sock = makeWASocket({
-        auth: state,
-        logger: pino({ level: "silent" }),
-        printQRInTerminal: false,
-        browser: ["Ubuntu", "Chrome", "20.0.04"],
-        connectTimeoutMs: 60000
-    });
+// ─── START BOT ────────────────────────────────
+let startBot = async function() {
+    try {
+        const authDir = config.SESSION_DIR;
+        const { state, saveCreds } = await useMultiFileAuthState(authDir);
 
-    sock.ev.on("creds.update", saveCreds);
+        const sock = makeWASocket({
+            auth: state,
+            logger: pino({ level: "silent" }),
+            browser: ["Ubuntu", "Chrome", "20.0.04"], // plain signature — confirmed working for pairing
+            markOnlineOnConnect: true,
+            connectTimeoutMs: 60000
+        });
 
-    sock.ev.on("connection.update", async (update) => {
-        const { connection, lastDisconnect } = update;
-        console.log("connection.update ->", JSON.stringify(update));
+        sock.ev.on("creds.update", saveCreds);
 
-        if (connection === "connecting" && !paired && !state.creds.registered) {
-            try {
-                await new Promise(r => setTimeout(r, 3000));
-                const code = await sock.requestPairingCode(config.OWNER_NUMBER);
-                console.log("\n\n🔑 PAIRING CODE: " + code + "\n\n");
-                paired = true;
-            } catch (e) {
-                console.log("❌ Pairing request failed:", e);
-            }
-        }
+        // ─── REGISTER EVENTS ──────────────────────
+        registerConnectionHandler(sock, startBot, commands);
+        registerMessageHandler(sock, commands);
+        registerCallHandler(sock);
+        registerGroupHandler(sock);
 
-        if (connection === "open") {
-            console.log("✅✅✅ CONNECTED SUCCESSFULLY as " + sock.user.id);
-        }
+        global.botSock = sock;
 
-        if (connection === "close") {
-            const statusCode = lastDisconnect?.error?.output?.statusCode;
-            console.log("❌ Connection closed. Status code:", statusCode, "Full error:", lastDisconnect?.error);
-            if (statusCode !== DisconnectReason.loggedOut) {
-                console.log("Retrying in 5s...");
-                setTimeout(startBot, 5000);
-            }
-        }
-    });
-}
+    } catch (e) {
+        console.error("Start error:", e.message);
+        setTimeout(startBot, 10000);
+    }
+};
+
+console.log("╔═══════════════════════════════════════════╗");
+console.log("║   ✦ 𝐒𝐔𝐏𝐑𝐄𝐌𝐀𝐂𝐘_𝐒𝐏𝐗 ✦               ║");
+console.log("║   🚀 MODULAR BOT                       ║");
+console.log("║   Waiting for connection...             ║");
+console.log("╚═══════════════════════════════════════════╝\n");
 
 startBot();
 
-process.on("uncaughtException", (e) => console.error("uncaughtException:", e));
-process.on("unhandledRejection", (e) => console.error("unhandledRejection:", e));
-                    
+process.on("uncaughtException", function(e) { console.error("Error:", e); });
+process.on("unhandledRejection", function(e) { console.error("Rejection:", e); });
