@@ -3,7 +3,7 @@
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 const config = require("../config");
-const { formatUptime, getRAMUsage, getSpeed } = require("../utils/helpers");
+const { formatUptime, getRAMUsage, getSpeed, animateMessage } = require("../utils/helpers");
 
 module.exports = {
     name: "menu",
@@ -12,45 +12,22 @@ module.exports = {
         const commands = extra.commands || {};
         const cmdCount = Object.keys(commands).length;
 
-        const statuses = [
-            { text: "⚡ Initializing System...", pct: 15 },
-            { text: "📂 Loading Command Modules...", pct: 40 },
-            { text: "🛡️ Loading Protection System...", pct: 65 },
-            { text: "🎨 Generating Interface...", pct: 90 },
-            { text: "✅ Menu Loaded!", pct: 100 },
-        ];
-
-        const buildLoadingText = (pct, status) => {
+        const buildFrame = (pct, status) => {
             const barLength = 20;
             const filled = Math.round((pct / 100) * barLength);
             const bar = "█".repeat(filled) + "░".repeat(barLength - filled);
             return `🔄 *LOADING MENU...*\n\n✦ ${config.BOT_NAME} ✦\n\n${bar} ${pct}%\n${status}`;
         };
 
-        // Send the first frame, then EDIT that same message for each subsequent frame.
-        let sent;
-        try {
-            sent = await sock.sendMessage(from, { text: buildLoadingText(statuses[0].pct, statuses[0].text) });
-        } catch (e) {
-            console.log("❌ Menu: failed to send initial loading message:", e.message);
-            return;
-        }
+        const frames = [
+            buildFrame(15, "⚡ Initializing System..."),
+            buildFrame(40, "📂 Loading Command Modules..."),
+            buildFrame(65, "🛡️ Loading Protection System..."),
+            buildFrame(90, "🎨 Generating Interface..."),
+            buildFrame(100, "✅ Menu Loaded!"),
+        ];
 
-        for (let i = 1; i < statuses.length; i++) {
-            await new Promise(r => setTimeout(r, 500));
-            const status = statuses[i];
-            try {
-                await sock.sendMessage(from, {
-                    text: buildLoadingText(status.pct, status.text),
-                    edit: sent.key
-                });
-            } catch (e) {
-                // If editing isn't supported by this Baileys version/account, stop animating
-                // and just fall through to sending the final menu normally.
-                console.log("⚠️ Menu: edit failed, skipping remaining animation frames:", e.message);
-                break;
-            }
-        }
+        await animateMessage(sock, from, frames, 500);
 
         const uptime = formatUptime();
         const ram = getRAMUsage();
