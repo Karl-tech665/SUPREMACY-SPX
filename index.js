@@ -3,6 +3,7 @@
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 const { default: makeWASocket, useMultiFileAuthState } = require("@whiskeysockets/baileys");
+const fs = require("fs");
 const path = require("path");
 const pino = require("pino");
 const config = require("./config");
@@ -30,9 +31,9 @@ let startBot = async function() {
         const sock = makeWASocket({
             auth: state,
             logger: pino({ level: "silent" }),
-            browser: ["Ubuntu", "Chrome", "20.0.04"], // plain signature — confirmed working for pairing
+            browser: ["Ubuntu", "Chrome", "20.0.04"],
             markOnlineOnConnect: true,
-            connectTimeoutMs: 60000
+            connectTimeoutMs: 30000
         });
 
         sock.ev.on("creds.update", saveCreds);
