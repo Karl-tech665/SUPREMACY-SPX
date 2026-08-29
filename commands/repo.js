@@ -1,37 +1,166 @@
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// COMMAND: REPO
+// COMMAND: REPO (Live Stats + Interactive Buttons)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 const config = require("../config");
+const { animateMessage } = require("../utils/helpers");
+
+const REPO_OWNER = "Karl-tech665";
+const REPO_NAME = "SUPREMACY-SPX";
+const REPO_URL = `https://github.com/${REPO_OWNER}/${REPO_NAME}`;
+const ZIP_URL = `https://github.com/${REPO_OWNER}/${REPO_NAME}/archive/refs/heads/main.zip`;
+
+function timeAgo(dateString) {
+    const diffMs = Date.now() - new Date(dateString).getTime();
+    const mins = Math.floor(diffMs / 60000);
+    const hours = Math.floor(mins / 60);
+    const days = Math.floor(hours / 24);
+    if (days > 0) return `${days}d ago`;
+    if (hours > 0) return `${hours}h ago`;
+    if (mins > 0) return `${mins}m ago`;
+    return "just now";
+}
+
+async function fetchRepoStats() {
+    const res = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}`, {
+        headers: { "User-Agent": config.BOT_NAME }
+    });
+    if (!res.ok) throw new Error(`GitHub API returned ${res.status}`);
+    const data = await res.json();
+    return {
+        stars: data.stargazers_count,
+        forks: data.forks_count,
+        created: new Date(data.created_at).toDateString(),
+        updated: timeAgo(data.updated_at),
+        owner: data.owner?.login || REPO_OWNER,
+        description: data.description || "The Ultimate WhatsApp Bot"
+    };
+}
+
+function buildCaption(stats) {
+    const divider = "───────────────────────";
+    return `🐙 ✦ *${config.BOT_NAME}* ✦
+_${stats.description}_
+${divider}
+⭐ Stars       : ${stats.stars}
+🍴 Forks       : ${stats.forks}
+📅 Created     : ${stats.created}
+🔄 Last Update : ${stats.updated}
+👤 Owner       : ${stats.owner}
+${divider}
+🔗 *Repository*
+${REPO_URL}
+
+💬 *Group*: ${config.PROXY.WEBSITE ? config.PROXY.WEBSITE : ""}
+📢 *Channel*: https://whatsapp.com/channel/${config.AUTO_FOLLOW_CHANNEL}
+${divider}
+✦ *POWERED BY ${config.BOT_NAME}* ✦`;
+}
+
+function buildFallbackCaption(reason) {
+    const divider = "───────────────────────";
+    return `🐙 ✦ *${config.BOT_NAME}* ✦
+_The Ultimate WhatsApp Bot_
+${divider}
+🔗 *Repository*
+${REPO_URL}
+⭐ Star and Fork to support!
+
+💬 *Group*: https://chat.whatsapp.com/${config.AUTO_JOIN_GROUP}
+📢 *Channel*: https://whatsapp.com/channel/${config.AUTO_FOLLOW_CHANNEL}
+${divider}
+⚠️ _Could not fetch live stats (${reason}). Visit the repo for the latest info._
+${divider}
+✦ *POWERED BY ${config.BOT_NAME}* ✦`;
+}
+
+async function sendInteractiveRepoCard(sock, from, caption) {
+    // Uses Baileys' nativeFlow interactive buttons (unofficial, version-dependent).
+    // Throws if unsupported — caller should catch and fall back to plain text.
+    const { generateWAMessageFromContent, proto } = require("@whiskeysockets/baileys");
+
+    const buttons = [
+        {
+            name: "cta_url",
+            buttonParamsJson: JSON.stringify({
+                display_text: "🔗 Open Repo",
+                url: REPO_URL,
+                merchant_url: REPO_URL
+            })
+        },
+        {
+            name: "cta_copy",
+            buttonParamsJson: JSON.stringify({
+                display_text: "📋 Copy Repo URL",
+                copy_code: REPO_URL
+            })
+        },
+        {
+            name: "cta_url",
+            buttonParamsJson: JSON.stringify({
+                display_text: "📦 Download ZIP",
+                url: ZIP_URL,
+                merchant_url: ZIP_URL
+            })
+        }
+    ];
+
+    const msg = generateWAMessageFromContent(from, {
+        viewOnceMessage: {
+            message: {
+                messageContextInfo: { deviceListMetadataVersion: 2, deviceListMetadata: {} },
+                interactiveMessage: proto.Message.InteractiveMessage.create({
+                    body: proto.Message.InteractiveMessage.Body.create({ text: caption }),
+                    footer: proto.Message.InteractiveMessage.Footer.create({ text: `Powered by ${config.BOT_NAME}` }),
+                    header: proto.Message.InteractiveMessage.Header.create({
+                        imageMessage: undefined,
+                        hasMediaAttachment: !!config.MENU_IMAGE
+                    }),
+                    nativeFlowMessage: proto.Message.InteractiveMessage.NativeFlowMessage.create({
+                        buttons
+                    })
+                })
+            }
+        }
+    }, {});
+
+    await sock.relayMessage(from, msg.message, { messageId: msg.key.id });
+}
 
 module.exports = {
     name: "repo",
     aliases: ["repository", "source", "github"],
     async execute(sock, from) {
-        const repoText = `🐙 ✦ *${config.BOT_NAME}* ✦ 🐙
-_GitHub Repository & Community Links_
+        const frames = [
+            "🐙 *Connecting to GitHub...*\n░░░░░░░░░░ 0%",
+            "🐙 *Fetching Repository Data...*\n████░░░░░░ 40%",
+            "🐙 *Pulling Live Stats...*\n███████░░░ 70%",
+            "✅ *Repo Data Ready!*\n██████████ 100%",
+        ];
+        await animateMessage(sock, from, frames, 400);
 
-📦 *Repository*
-https://github.com/Karl-tech665/SUPREMACY-SPX
-⭐ _Star and Fork to support the project!_
-
-━━━━━━━━━━━━━━━━━━━━
-💬 *WhatsApp Group*
-https://chat.whatsapp.com/Cis103JyuBEFGYWq7AGwpe
-
-📢 *WhatsApp Channel*
-https://whatsapp.com/channel/0029Vb84TR9IXnltkyhYEC3R
-
-📲 *Telegram*
-@SupremePrime_SPX
-━━━━━━━━━━━━━━━━━━━━
-
-✦ *POWERED BY ${config.BOT_NAME}* ✦`;
-
+        let caption;
         try {
-            await sock.sendMessage(from, { text: repoText });
+            const stats = await fetchRepoStats();
+            caption = buildCaption(stats);
         } catch (e) {
-            console.log("❌ Repo command failed:", e.message);
+            console.log("⚠️ Repo: failed to fetch live GitHub stats:", e.message);
+            caption = buildFallbackCaption(e.message);
+        }
+
+        // Try the fancy interactive card first; fall back to a plain image+caption on any failure.
+        try {
+            await sendInteractiveRepoCard(sock, from, caption);
+        } catch (e) {
+            console.log("⚠️ Repo: interactive buttons unsupported, falling back to plain message:", e.message);
+            try {
+                await sock.sendMessage(from, {
+                    image: { url: config.MENU_IMAGE },
+                    caption
+                });
+            } catch (e2) {
+                console.log("❌ Repo: fallback send also failed:", e2.message);
+            }
         }
     }
 };
