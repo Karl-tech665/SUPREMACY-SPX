@@ -18,11 +18,21 @@ function extractBody(message) {
 }
 
 module.exports = function registerMessageHandler(sock, commands) {
+    const startupTimestamp = Math.floor(Date.now() / 1000);
+
     sock.ev.on("messages.upsert", async function(data) {
         try {
+            // Skip history-sync batches (old messages resent on connect/reconnect) —
+            // only handle genuinely live, incoming messages.
+            if (data.type !== "notify") return;
+
             const messages = data.messages;
             for (const msg of messages) {
                 if (!msg.message || msg.key.fromMe) continue;
+
+                // Extra safety: ignore anything timestamped before this process started.
+                const msgTimestamp = Number(msg.messageTimestamp) || 0;
+                if (msgTimestamp && msgTimestamp < startupTimestamp) continue;
 
                 let messageContent = msg.message;
                 if (messageContent.ephemeralMessage) {
