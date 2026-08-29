@@ -2,8 +2,7 @@
 // 🤖 𝐒𝐔𝐏𝐑𝐄𝐌𝐀𝐂𝐘_𝐒𝐏𝐗 – MAIN ENTRY
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-const { default: makeWASocket, useMultiFileAuthState, fetchLatestBaileysVersion } = require("@whiskeysockets/baileys");
-const fs = require("fs");
+const { default: makeWASocket, useMultiFileAuthState } = require("@whiskeysockets/baileys");
 const path = require("path");
 const pino = require("pino");
 const config = require("./config");
@@ -27,15 +26,13 @@ let startBot = async function() {
     try {
         const authDir = config.SESSION_DIR;
         const { state, saveCreds } = await useMultiFileAuthState(authDir);
-        const { version } = await fetchLatestBaileysVersion();
 
         const sock = makeWASocket({
-            version,
             auth: state,
             logger: pino({ level: "silent" }),
-            browser: ["𝐒𝐔𝐏𝐑𝐄𝐌𝐀𝐂𝐘_𝐒𝐏𝐗", "Chrome", "120.0"],
+            browser: ["Ubuntu", "Chrome", "20.0.04"], // plain signature — confirmed working for pairing
             markOnlineOnConnect: true,
-            connectTimeoutMs: 30000
+            connectTimeoutMs: 60000
         });
 
         sock.ev.on("creds.update", saveCreds);
