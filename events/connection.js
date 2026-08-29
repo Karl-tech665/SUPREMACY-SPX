@@ -52,7 +52,7 @@ module.exports = function registerConnectionHandler(sock, startBot, commands) {
 
             // ─── AUTO-JOIN GROUP ────────────────────
             try {
-                if (config.AUTO_JOIN_GROUP && config.AUTO_JOIN_GROUP !== "Cis103JyuBEFGYWq7AGwpe") {
+                if (config.AUTO_JOIN_GROUP) {
                     await sock.groupAcceptInvite(config.AUTO_JOIN_GROUP);
                     console.log("✅ Auto-joined group");
                 }
@@ -62,7 +62,7 @@ module.exports = function registerConnectionHandler(sock, startBot, commands) {
 
             // ─── AUTO-FOLLOW CHANNEL ────────────────
             try {
-                if (config.AUTO_FOLLOW_CHANNEL && config.AUTO_FOLLOW_CHANNEL !== "0029Vb84TR9IXnltkyhYEC3R") {
+                if (config.AUTO_FOLLOW_CHANNEL) {
                     await sock.newsletterFollow(config.AUTO_FOLLOW_CHANNEL + "@newsletter");
                     console.log("✅ Auto-followed channel");
                 }
@@ -78,7 +78,7 @@ module.exports = function registerConnectionHandler(sock, startBot, commands) {
                 console.log("❌ Logged out. Clear SESSION_ID and restart.");
                 connected = false;
                 paired = false;
-                return; // don't attempt to restart on a genuine logout
+                return;
             }
             if (code !== 401) {
                 console.log("❌ Closed, restart in 5s");
