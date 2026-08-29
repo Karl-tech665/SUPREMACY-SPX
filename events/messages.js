@@ -24,7 +24,6 @@ module.exports = function registerMessageHandler(sock, commands) {
             for (const msg of messages) {
                 if (!msg.message || msg.key.fromMe) continue;
 
-                // Unwrap ephemeral/view-once messages
                 let messageContent = msg.message;
                 if (messageContent.ephemeralMessage) {
                     messageContent = messageContent.ephemeralMessage.message;
@@ -44,7 +43,7 @@ module.exports = function registerMessageHandler(sock, commands) {
 
                     if (cmd) {
                         try {
-                            await cmd.execute(sock, from, args, msg, { sender, isGroup });
+                            await cmd.execute(sock, from, args, msg, { sender, isGroup, commands });
                         } catch (cmdError) {
                             console.error(`❌ Command "${cmdName}" failed:`, cmdError.message);
                         }
