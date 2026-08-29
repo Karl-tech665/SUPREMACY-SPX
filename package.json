@@ -1,0 +1,21 @@
+{
+  "name": "supremacy-spx-bot",
+  "version": "6.0.0",
+  "description": "𝐒𝐔𝐏𝐑𝐄𝐌𝐀𝐂𝐘_𝐒𝐏𝐗 – Modular WhatsApp Bot",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "^6.7.8",
+    "axios": "^1.6.0",
+    "pino": "^8.16.0",
+    "wa-sticker-formatter": "^4.4.4",
+    "yt-search": "^2.13.1",
+    "ytdl-core": "^4.11.5",
+    "@bochilteam/scraper": "^5.0.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
