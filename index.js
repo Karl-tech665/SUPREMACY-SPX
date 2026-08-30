@@ -6,6 +6,7 @@ const { default: makeWASocket, useMultiFileAuthState } = require("@whiskeysocket
 const fs = require("fs");
 const path = require("path");
 const pino = require("pino");
+const http = require("http"); // Added for Render
 const config = require("./config");
 const { restoreSession } = require("./utils/session");
 const { loadCommands } = require("./utils/commandLoader");
@@ -15,7 +16,6 @@ const registerCallHandler = require("./events/calls");
 const registerGroupHandler = require("./events/group");
 
 // ─── LOAD MEDIA DEPENDENCIES (GLOBAL ACCESS) ──
-// These are required here so the commands folder can use them without crashing
 const ytdl = require("@zorner/ytdl-core");
 const sharp = require("sharp");
 const ffmpeg = require("@ffmpeg-installer/ffmpeg");
@@ -23,6 +23,15 @@ const ffmpeg = require("@ffmpeg-installer/ffmpeg");
 global.ytdl = ytdl;
 global.sharp = sharp;
 global.ffmpegPath = ffmpeg.path;
+
+// ─── HTTP SERVER (STOPS RENDER FROM CRASHING) ──
+const server = http.createServer((req, res) => {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end('Bot Online');
+});
+server.listen(process.env.PORT || 3000, () => {
+    console.log(`🚀 HTTP Server listening on port ${process.env.PORT || 3000}`);
+});
 
 // ─── RESTORE SESSION ──────────────────────────
 restoreSession();
