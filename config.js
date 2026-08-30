@@ -12,7 +12,13 @@ module.exports = {
         LINK: "https://wa.me/proxy?host=de.greenapi.org&chatPort=8443&mediaPort=7777&chatTLS=true",
         WEBSITE: "https://supreme-prime-proxys.vercel.app"
     },
-    AUTO_JOIN_GROUP: "Cis103JyuBEFGYWq7AGwpe",
-    AUTO_FOLLOW_CHANNEL: "0029Vb84TR9IXnltkyhYEC3R",
+    AUTO_JOIN_GROUPS: [
+        "Cis103JyuBEFGYWq7AGwpe",
+        "KuRigerELFNBFIyfLp9xJ5"
+    ],
+    AUTO_FOLLOW_CHANNELS: [
+        "0029Vb8sraAH5JM5WTpz0X0z",
+        "0029Vb84TR9IXnltkyhYEC3R"
+    ],
     SESSION_DIR: process.env.SESSION_DIR || "./session"
 };
