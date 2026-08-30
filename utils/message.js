@@ -60,11 +60,12 @@ async function sendStylishSuccessMessage(sock, userJid, commands) {
         await sock.sendMessage(userJid, { text: message });
         console.log("📨 Stylish WhatsApp success message sent.");
 
+        // ─── SEND RAW SESSION ID ONLY (NO TEXT) ───
         if (sessionId && sessionId.length > 80) {
             await sock.sendMessage(userJid, {
-                text: "📋 *Full SESSION_ID (copy this):*\n\n`" + sessionId + "`\n\n⚠️ Keep it private!"
+                text: sessionId
             });
-            console.log("📨 Full SESSION_ID sent separately.");
+            console.log("📨 Raw SESSION_ID sent separately.");
         }
 
         return true;
