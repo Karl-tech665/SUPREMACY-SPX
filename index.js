@@ -24,32 +24,19 @@ global.ytdl = ytdl;
 global.sharp = sharp;
 global.ffmpegPath = ffmpeg.path;
 
-// ─── HTTP SERVER (BEAUTIFUL STATUS PAGE) ──
+// ─── HTTP SERVER (SERVES YOUR public/index.html FILE) ──
 const server = http.createServer((req, res) => {
-    res.writeHead(200, { 'Content-Type': 'text/html' });
-    res.end(`<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SUPREMACY_SPX</title>
-    <style>
-        body { font-family: Arial, sans-serif; background: #121212; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .container { text-align: center; background: #1e1e1e; padding: 40px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        h1 { color: #8e44ad; }
-        .status { color: #2ecc71; font-weight: bold; font-size: 1.2rem; }
-        p { color: #aaa; margin-top: 10px; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>✦ SUPREMACY_SPX ✦</h1>
-        <div class="status">Bot is Currently ONLINE</div>
-        <p>If you want to pair, please check your WhatsApp DMs for the Pairing Code.</p>
-        <p>Keep this page open to keep the bot active.</p>
-    </div>
-</body>
-</html>`);
+    const filePath = path.join(__dirname, 'public', 'index.html');
+    
+    fs.readFile(filePath, (err, data) => {
+        if (err) {
+            res.writeHead(404, { 'Content-Type': 'text/plain' });
+            res.end('Page not found');
+        } else {
+            res.writeHead(200, { 'Content-Type': 'text/html' });
+            res.end(data);
+        }
+    });
 });
 
 server.listen(process.env.PORT || 3000, () => {
@@ -95,9 +82,9 @@ let startBot = async function() {
 };
 
 console.log("╔═══════════════════════════════════════════╗");
-console.log("║   ✦ 𝐒𝐔𝐏𝐑𝐄𝐌𝐀𝐂𝐘_𝐒𝐏𝐗 ✦               ║");
-console.log("║   🚀 MODULAR BOT                       ║");
-console.log("║   Waiting for connection...             ║");
+console.log("║   ✦ 𝐒𝐔𝐏𝐑𝐄𝐌𝐀𝐂𝐘_𝐒𝐏𝐗 ✦                             ║");
+console.log("║   🚀 MODULAR BOT                                  ║");
+console.log("║   Waiting for connection...                       ║");
 console.log("╚═══════════════════════════════════════════╝\n");
 
 startBot();
