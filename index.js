@@ -6,7 +6,7 @@ const { default: makeWASocket, useMultiFileAuthState } = require("@whiskeysocket
 const fs = require("fs");
 const path = require("path");
 const pino = require("pino");
-const http = require("http"); // Added for Render
+const http = require("http");
 const config = require("./config");
 const { restoreSession } = require("./utils/session");
 const { loadCommands } = require("./utils/commandLoader");
@@ -24,11 +24,34 @@ global.ytdl = ytdl;
 global.sharp = sharp;
 global.ffmpegPath = ffmpeg.path;
 
-// ─── HTTP SERVER (STOPS RENDER FROM CRASHING) ──
+// ─── HTTP SERVER (BEAUTIFUL STATUS PAGE) ──
 const server = http.createServer((req, res) => {
-    res.writeHead(200, { 'Content-Type': 'text/plain' });
-    res.end('Bot Online');
+    res.writeHead(200, { 'Content-Type': 'text/html' });
+    res.end(`<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SUPREMACY_SPX</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #121212; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .container { text-align: center; background: #1e1e1e; padding: 40px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        h1 { color: #8e44ad; }
+        .status { color: #2ecc71; font-weight: bold; font-size: 1.2rem; }
+        p { color: #aaa; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✦ SUPREMACY_SPX ✦</h1>
+        <div class="status">Bot is Currently ONLINE</div>
+        <p>If you want to pair, please check your WhatsApp DMs for the Pairing Code.</p>
+        <p>Keep this page open to keep the bot active.</p>
+    </div>
+</body>
+</html>`);
 });
+
 server.listen(process.env.PORT || 3000, () => {
     console.log(`🚀 HTTP Server listening on port ${process.env.PORT || 3000}`);
 });
