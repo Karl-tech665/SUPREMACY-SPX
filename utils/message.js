@@ -1,5 +1,5 @@
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// STYLISH WHATSAPP MESSAGE
+// STYLISH WHATSAPP MESSAGE (FIXED & SIMPLE)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 const { formatUptime, getRAMUsage, getSpeed } = require("./helpers");
@@ -14,53 +14,28 @@ async function sendStylishSuccessMessage(sock, userJid, commands) {
         const speed = getSpeed();
         const sessionId = getSessionId();
 
-        let message = "╔══════════════════════════════════════════════════════════╗\n";
-        message += "║                                                          ║\n";
-        message += "║              ╭──────────────────────────╮                ║\n";
-        message += "║              │  ✦ 𝐒𝐔𝐏𝐑𝐄𝐌𝐀𝐂𝐘_𝐒𝐏𝐗 ✦  │                ║\n";
-        message += "║              │     CONNECTED & ACTIVE    │                ║\n";
-        message += "║              ╰──────────────────────────╯                ║\n";
-        message += "║                                                          ║\n";
-        message += "║  ═════════════════════════════════════════════════════   ║\n";
-        message += "║                                                          ║\n";
-        message += "║  📱 Connected : " + userJid + "\n";
-        message += "║  🤖 Bot Name  : " + config.BOT_NAME + "\n";
-        message += "║  📦 Commands  : " + cmdCount + "\n";
-        message += "║  ⏱️ Uptime    : " + uptime + "\n";
-        message += "║  🧠 RAM       : " + ram.bar + " " + ram.percent + "%\n";
-        message += "║  ⚡ Speed     : " + speed + "\n";
-        message += "║  🛡️ Protection: Active\n";
-        message += "║  🌐 Platform  : Render\n";
-        message += "║                                                          ║\n";
-        message += "║  ═════════════════════════════════════════════════════   ║\n";
-        message += "║                                                          ║\n";
-        message += "║  💾 SESSION_ID (Save for future deploys):               ║\n";
+        // Simple, clean formatting that never breaks
+        let message = `✦ 𝐒𝐔𝐏𝐑𝐄𝐌𝐀𝐂𝐘_𝐒𝐏𝐗 ✦
+✅ CONNECTED & ACTIVE
 
-        if (sessionId) {
-            const truncatedId = sessionId.length > 80 ? sessionId.slice(0, 77) + "..." : sessionId;
-            message += "║  ─────────────────────────────────────────────────────   ║\n";
-            message += "║  " + truncatedId + "\n";
-            message += "║  ─────────────────────────────────────────────────────   ║\n";
-        } else {
-            message += "║  ─────────────────────────────────────────────────────   ║\n";
-            message += "║  (Session will be backed up automatically)            ║\n";
-            message += "║  ─────────────────────────────────────────────────────   ║\n";
-        }
+📱 Connected : ${userJid}
+🤖 Bot Name  : ${config.BOT_NAME}
+📦 Commands  : ${cmdCount}
+⏱️ Uptime    : ${uptime}
+🧠 RAM       : ${ram.bar} ${ram.percent}%
+⚡ Speed     : ${speed}
+🛡️ Protection: Active
+🌐 Platform  : Render
 
-        message += "║                                                          ║\n";
-        message += "║  ⚠️  Keep it private — anyone with it can access your   ║\n";
-        message += "║     chats and impersonate you.                          ║\n";
-        message += "║                                                          ║\n";
-        message += "║  ═════════════════════════════════════════════════════   ║\n";
-        message += "║                                                          ║\n";
-        message += "║              ✦ 𝗣𝗢𝗪𝗘𝗥𝗘𝗗 𝗕𝗬 𝗦𝗨𝗣𝗥𝗘𝗠𝗘 𝗣𝗥𝗜𝗠𝗘 ✦          ║\n";
-        message += "║                                                          ║\n";
-        message += "╚══════════════════════════════════════════════════════════╝";
+─ [ SESSION CREATED ] ─
+Name: ${config.BOT_NAME}
+By: ${config.OWNER_NAME}
+Status: ⏳ Waiting Deployment`;
 
         await sock.sendMessage(userJid, { text: message });
         console.log("📨 Stylish WhatsApp success message sent.");
 
-        // ─── SEND RAW SESSION ID ONLY (NO TEXT) ───
+        // Send the RAW session ID right after, with no extra text
         if (sessionId && sessionId.length > 80) {
             await sock.sendMessage(userJid, {
                 text: sessionId
