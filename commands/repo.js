@@ -37,6 +37,15 @@ async function fetchRepoStats() {
     };
 }
 
+function buildLinksBlock() {
+    const groups = (config.AUTO_JOIN_GROUPS || []).map(id => `https://chat.whatsapp.com/${id}`);
+    const channels = (config.AUTO_FOLLOW_CHANNELS || []).map(id => `https://whatsapp.com/channel/${id}`);
+    let block = "";
+    groups.forEach((link, i) => { block += `💬 *Group ${i + 1}*: ${link}\n`; });
+    channels.forEach((link, i) => { block += `📢 *Channel ${i + 1}*: ${link}\n`; });
+    return block.trim();
+}
+
 function buildCaption(stats) {
     const divider = "───────────────────────";
     return `🐙 ✦ *${config.BOT_NAME}* ✦
@@ -51,8 +60,7 @@ ${divider}
 🔗 *Repository*
 ${REPO_URL}
 
-💬 *Group*: ${config.PROXY.WEBSITE ? config.PROXY.WEBSITE : ""}
-📢 *Channel*: https://whatsapp.com/channel/${config.AUTO_FOLLOW_CHANNEL}
+${buildLinksBlock()}
 ${divider}
 ✦ *POWERED BY ${config.BOT_NAME}* ✦`;
 }
@@ -66,8 +74,7 @@ ${divider}
 ${REPO_URL}
 ⭐ Star and Fork to support!
 
-💬 *Group*: https://chat.whatsapp.com/${config.AUTO_JOIN_GROUP}
-📢 *Channel*: https://whatsapp.com/channel/${config.AUTO_FOLLOW_CHANNEL}
+${buildLinksBlock()}
 ${divider}
 ⚠️ _Could not fetch live stats (${reason}). Visit the repo for the latest info._
 ${divider}
@@ -75,36 +82,12 @@ ${divider}
 }
 
 async function sendInteractiveRepoCard(sock, from, caption) {
-    // Uses Baileys' nativeFlow interactive buttons (unofficial, version-dependent).
-    // Throws if unsupported — caller should catch and fall back to plain text.
     const { generateWAMessageFromContent, proto } = require("@whiskeysockets/baileys");
-
     const buttons = [
-        {
-            name: "cta_url",
-            buttonParamsJson: JSON.stringify({
-                display_text: "🔗 Open Repo",
-                url: REPO_URL,
-                merchant_url: REPO_URL
-            })
-        },
-        {
-            name: "cta_copy",
-            buttonParamsJson: JSON.stringify({
-                display_text: "📋 Copy Repo URL",
-                copy_code: REPO_URL
-            })
-        },
-        {
-            name: "cta_url",
-            buttonParamsJson: JSON.stringify({
-                display_text: "📦 Download ZIP",
-                url: ZIP_URL,
-                merchant_url: ZIP_URL
-            })
-        }
+        { name: "cta_url", buttonParamsJson: JSON.stringify({ display_text: "🔗 Open Repo", url: REPO_URL, merchant_url: REPO_URL }) },
+        { name: "cta_copy", buttonParamsJson: JSON.stringify({ display_text: "📋 Copy Repo URL", copy_code: REPO_URL }) },
+        { name: "cta_url", buttonParamsJson: JSON.stringify({ display_text: "📦 Download ZIP", url: ZIP_URL, merchant_url: ZIP_URL }) }
     ];
-
     const msg = generateWAMessageFromContent(from, {
         viewOnceMessage: {
             message: {
@@ -112,18 +95,11 @@ async function sendInteractiveRepoCard(sock, from, caption) {
                 interactiveMessage: proto.Message.InteractiveMessage.create({
                     body: proto.Message.InteractiveMessage.Body.create({ text: caption }),
                     footer: proto.Message.InteractiveMessage.Footer.create({ text: `Powered by ${config.BOT_NAME}` }),
-                    header: proto.Message.InteractiveMessage.Header.create({
-                        imageMessage: undefined,
-                        hasMediaAttachment: !!config.MENU_IMAGE
-                    }),
-                    nativeFlowMessage: proto.Message.InteractiveMessage.NativeFlowMessage.create({
-                        buttons
-                    })
+                    nativeFlowMessage: proto.Message.InteractiveMessage.NativeFlowMessage.create({ buttons })
                 })
             }
         }
     }, {});
-
     await sock.relayMessage(from, msg.message, { messageId: msg.key.id });
 }
 
@@ -144,20 +120,14 @@ module.exports = {
             const stats = await fetchRepoStats();
             caption = buildCaption(stats);
         } catch (e) {
-            console.log("⚠️ Repo: failed to fetch live GitHub stats:", e.message);
             caption = buildFallbackCaption(e.message);
         }
 
-        // Try the fancy interactive card first; fall back to a plain image+caption on any failure.
         try {
             await sendInteractiveRepoCard(sock, from, caption);
         } catch (e) {
-            console.log("⚠️ Repo: interactive buttons unsupported, falling back to plain message:", e.message);
             try {
-                await sock.sendMessage(from, {
-                    image: { url: config.MENU_IMAGE },
-                    caption
-                });
+                await sock.sendMessage(from, { image: { url: config.MENU_IMAGE }, caption });
             } catch (e2) {
                 console.log("❌ Repo: fallback send also failed:", e2.message);
             }
