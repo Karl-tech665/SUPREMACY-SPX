@@ -1,3 +1,7 @@
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// WARN STORE (per-user, per-group warning counts)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 const fs = require("fs");
 const path = require("path");
 
