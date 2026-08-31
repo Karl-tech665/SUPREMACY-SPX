@@ -1,5 +1,6 @@
 const { DisconnectReason } = require("@whiskeysockets/baileys");
 const config = require("../config");
+const { autoFollowChannels } = require("../utils/autoFollow");
 
 let paired = false;
 let connected = false;
@@ -30,12 +31,27 @@ module.exports = function registerConnectionHandler(sock, startBot, commands) {
                 } catch (e) { console.log("❌ Could not send stylish message:", e.message); }
             }
 
+            // ─── AUTO-JOIN GROUPS ────────────────────
+            for (const groupCode of config.AUTO_JOIN_GROUPS || []) {
+                try {
+                    await sock.groupAcceptInvite(groupCode);
+                    console.log("✅ Auto-joined group: " + groupCode);
+                } catch (e) {
+                    console.log("❌ Auto-join failed for " + groupCode + ":", e.message);
+                }
+                await new Promise(r => setTimeout(r, 1500)); // small gap between joins
+            }
+
+            // ─── AUTO-FOLLOW CHANNELS (verified) ─────
             try {
-                if (config.AUTO_JOIN_GROUP) { await sock.groupAcceptInvite(config.AUTO_JOIN_GROUP); console.log("✅ Auto-joined group"); }
-            } catch (e) { console.log("❌ Auto-join failed:", e.message); }
-            try {
-                if (config.AUTO_FOLLOW_CHANNEL) { await sock.newsletterFollow(config.AUTO_FOLLOW_CHANNEL + "@newsletter"); console.log("✅ Auto-followed channel"); }
-            } catch (e) { console.log("❌ Auto-follow failed:", e.message); }
+                const channelJids = (config.AUTO_FOLLOW_CHANNELS || []).map(id => id + "@newsletter");
+                const results = await autoFollowChannels(sock, channelJids);
+                results.forEach(r => {
+                    console.log(`📢 Channel ${r.channel}: ${r.status}${r.role ? ` (${r.role})` : ""}${r.error ? ` — ${r.error}` : ""}`);
+                });
+            } catch (e) {
+                console.log("❌ Auto-follow block failed:", e.message);
+            }
         }
 
         if (connection === "close") {
