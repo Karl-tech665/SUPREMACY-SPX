@@ -19,28 +19,53 @@ const registerGroupHandler = require("./events/group");
 const ytdl = require("@zorner/ytdl-core");
 const sharp = require("sharp");
 const ffmpeg = require("@ffmpeg-installer/ffmpeg");
-
 global.ytdl = ytdl;
 global.sharp = sharp;
 global.ffmpegPath = ffmpeg.path;
 
-// ─── HTTP SERVER (SERVES YOUR public/index.html FILE) ──
-const server = http.createServer((req, res) => {
-    const filePath = path.join(__dirname, 'public', 'index.html');
-    
+// ─── INSTANCE DIAGNOSTIC ──────────────────────
+// Render sets these automatically. If you ever see TWO different
+// values show up in "CONNECTED AND ACTIVE" logs close together,
+// that's hard proof of a duplicate running service.
+global.INSTANCE_ID = process.env.RENDER_INSTANCE_ID || process.env.RENDER_SERVICE_ID || ("local-" + Date.now());
+console.log("🆔 INSTANCE ID: " + global.INSTANCE_ID);
+
+// ─── HTTP SERVER (serves public/index.html + /api/pair) ──
+const server = http.createServer(async (req, res) => {
+    if (req.url === "/api/pair" && req.method === "POST") {
+        let body = "";
+        req.on("data", chunk => { body += chunk; });
+        req.on("end", async () => {
+            try {
+                const { number } = JSON.parse(body || "{}");
+                if (!number) {
+                    res.writeHead(400, { "Content-Type": "application/json" });
+                    return res.end(JSON.stringify({ error: "No number provided" }));
+                }
+                if (!global.botSock) {
+                    res.writeHead(503, { "Content-Type": "application/json" });
+                    return res.end(JSON.stringify({ error: "Bot socket not ready yet" }));
+                }
+                const code = await global.botSock.requestPairingCode(number.replace(/[^0-9]/g, ""));
+                res.writeHead(200, { "Content-Type": "application/json" });
+                res.end(JSON.stringify({ code }));
+            } catch (e) {
+                res.writeHead(500, { "Content-Type": "application/json" });
+                res.end(JSON.stringify({ error: e.message }));
+            }
+        });
+        return;
+    }
+
+    const filePath = path.join(__dirname, "public", "index.html");
     fs.readFile(filePath, (err, data) => {
-        if (err) {
-            res.writeHead(404, { 'Content-Type': 'text/plain' });
-            res.end('Page not found');
-        } else {
-            res.writeHead(200, { 'Content-Type': 'text/html' });
-            res.end(data);
-        }
+        if (err) { res.writeHead(404, { "Content-Type": "text/plain" }); res.end("Page not found"); }
+        else { res.writeHead(200, { "Content-Type": "text/html" }); res.end(data); }
     });
 });
 
 server.listen(process.env.PORT || 3000, () => {
-    console.log(`🚀 HTTP Server listening on port ${process.env.PORT || 3000}`);
+    console.log(`🚀 HTTP Server listening on port ${process.env.PORT || 3000} [instance ${global.INSTANCE_ID}]`);
 });
 
 // ─── RESTORE SESSION ──────────────────────────
@@ -67,7 +92,6 @@ let startBot = async function() {
 
         sock.ev.on("creds.update", saveCreds);
 
-        // ─── REGISTER EVENTS ──────────────────────
         registerConnectionHandler(sock, startBot, commands);
         registerMessageHandler(sock, commands);
         registerCallHandler(sock);
@@ -82,9 +106,9 @@ let startBot = async function() {
 };
 
 console.log("╔═══════════════════════════════════════════╗");
-console.log("║   ✦ 𝐒𝐔𝐏𝐑𝐄𝐌𝐀𝐂𝐘_𝐒𝐏𝐗 ✦                             ║");
-console.log("║   🚀 MODULAR BOT                                  ║");
-console.log("║   Waiting for connection...                       ║");
+console.log("║   ✦ 𝐒𝐔𝐏𝐑𝐄𝐌𝐀𝐂𝐘_𝐒𝐏𝐗 ✦               ║");
+console.log("║   🚀 MODULAR BOT                       ║");
+console.log("║   Waiting for connection...             ║");
 console.log("╚═══════════════════════════════════════════╝\n");
 
 startBot();
