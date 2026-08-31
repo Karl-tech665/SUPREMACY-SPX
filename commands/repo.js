@@ -62,7 +62,7 @@ ${REPO_URL}
 
 ${buildLinksBlock()}
 ${divider}
-✦ *POWERED BY ${config.BOT_NAME}* ✦`;
+✦ *POWERED BY ${config.FOOTER_BRAND}* ✦`;
 }
 
 function buildFallbackCaption(reason) {
@@ -78,28 +78,31 @@ ${buildLinksBlock()}
 ${divider}
 ⚠️ _Could not fetch live stats (${reason}). Visit the repo for the latest info._
 ${divider}
-✦ *POWERED BY ${config.BOT_NAME}* ✦`;
+✦ *POWERED BY ${config.FOOTER_BRAND}* ✦`;
 }
 
 async function sendInteractiveRepoCard(sock, from, caption) {
     const { generateWAMessageFromContent, proto } = require("@whiskeysockets/baileys");
+
     const buttons = [
         { name: "cta_url", buttonParamsJson: JSON.stringify({ display_text: "🔗 Open Repo", url: REPO_URL, merchant_url: REPO_URL }) },
         { name: "cta_copy", buttonParamsJson: JSON.stringify({ display_text: "📋 Copy Repo URL", copy_code: REPO_URL }) },
         { name: "cta_url", buttonParamsJson: JSON.stringify({ display_text: "📦 Download ZIP", url: ZIP_URL, merchant_url: ZIP_URL }) }
     ];
+
     const msg = generateWAMessageFromContent(from, {
         viewOnceMessage: {
             message: {
                 messageContextInfo: { deviceListMetadataVersion: 2, deviceListMetadata: {} },
                 interactiveMessage: proto.Message.InteractiveMessage.create({
                     body: proto.Message.InteractiveMessage.Body.create({ text: caption }),
-                    footer: proto.Message.InteractiveMessage.Footer.create({ text: `Powered by ${config.BOT_NAME}` }),
+                    footer: proto.Message.InteractiveMessage.Footer.create({ text: `Powered by ${config.FOOTER_BRAND}` }),
                     nativeFlowMessage: proto.Message.InteractiveMessage.NativeFlowMessage.create({ buttons })
                 })
             }
         }
     }, {});
+
     await sock.relayMessage(from, msg.message, { messageId: msg.key.id });
 }
 
@@ -120,14 +123,19 @@ module.exports = {
             const stats = await fetchRepoStats();
             caption = buildCaption(stats);
         } catch (e) {
+            console.log("⚠️ Repo: failed to fetch live GitHub stats:", e.message);
             caption = buildFallbackCaption(e.message);
         }
 
         try {
             await sendInteractiveRepoCard(sock, from, caption);
         } catch (e) {
+            console.log("⚠️ Repo: interactive buttons unsupported, falling back to plain message:", e.message);
             try {
-                await sock.sendMessage(from, { image: { url: config.MENU_IMAGE }, caption });
+                await sock.sendMessage(from, {
+                    image: { url: config.MENU_IMAGE },
+                    caption
+                });
             } catch (e2) {
                 console.log("❌ Repo: fallback send also failed:", e2.message);
             }
