@@ -24,9 +24,6 @@ global.sharp = sharp;
 global.ffmpegPath = ffmpeg.path;
 
 // ─── INSTANCE DIAGNOSTIC ──────────────────────
-// Render sets these automatically. If two different values ever show up
-// in "CONNECTED AND ACTIVE" logs close together, that's hard proof of a
-// duplicate running service.
 global.INSTANCE_ID = process.env.RENDER_INSTANCE_ID || process.env.RENDER_SERVICE_ID || ("local-" + Date.now());
 console.log("🆔 INSTANCE ID: " + global.INSTANCE_ID);
 
@@ -37,6 +34,16 @@ const server = http.createServer(async (req, res) => {
         req.on("data", chunk => { body += chunk; });
         req.on("end", async () => {
             try {
+                // Refuse to touch an already-paired socket — requesting a
+                // pairing code again on a live/registered connection corrupts
+                // the existing session and forces a disconnect.
+                if (global.botSock?.authState?.creds?.registered) {
+                    res.writeHead(409, { "Content-Type": "application/json" });
+                    return res.end(JSON.stringify({
+                        error: "This bot is already paired to its owner number. This page cannot pair a second, different number on the same connection — doing so will disconnect the bot."
+                    }));
+                }
+
                 let parsed = {};
                 try { parsed = JSON.parse(body || "{}"); }
                 catch { parsed = Object.fromEntries(new URLSearchParams(body)); }
@@ -50,6 +57,7 @@ const server = http.createServer(async (req, res) => {
                     res.writeHead(503, { "Content-Type": "application/json" });
                     return res.end(JSON.stringify({ error: "Bot socket not ready yet" }));
                 }
+
                 const code = await global.botSock.requestPairingCode(String(number).replace(/[^0-9]/g, ""));
                 res.writeHead(200, { "Content-Type": "application/json" });
                 res.end(JSON.stringify({ code }));
@@ -118,9 +126,6 @@ console.log("╚═════════════════════�
 startBot();
 
 // ─── GRACEFUL SHUTDOWN ─────────────────────────
-// Ensures the WhatsApp socket closes cleanly before Render kills the
-// process on redeploy, instead of leaving a half-open connection that
-// can conflict with the next instance's fresh connection.
 async function shutdown(signal) {
     console.log(`\n🛑 Received ${signal}, shutting down gracefully...`);
     try {
