@@ -1,12 +1,6 @@
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// AUTO-FOLLOW CHANNELS (verifies actual follow state)
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
 async function autoFollowChannels(sock, channelJids = []) {
     const results = [];
-    const channels = [
-        ...new Set(channelJids.filter(jid => typeof jid === "string" && jid.endsWith("@newsletter")))
-    ];
+    const channels = [...new Set(channelJids.filter(jid => typeof jid === "string" && jid.endsWith("@newsletter")))];
 
     async function isFollowing(channelJid) {
         try {
@@ -21,17 +15,10 @@ async function autoFollowChannels(sock, channelJids = []) {
     for (const channelJid of channels) {
         try {
             const before = await isFollowing(channelJid);
-            if (before.following) {
-                results.push({ channel: channelJid, status: "already_following", role: before.role });
-                continue;
-            }
+            if (before.following) { results.push({ channel: channelJid, status: "already_following", role: before.role }); continue; }
             try { await sock.newsletterFollow(channelJid); } catch {}
             const after = await isFollowing(channelJid);
-            results.push({
-                channel: channelJid,
-                status: after.following ? "followed" : "not_followed",
-                role: after.role
-            });
+            results.push({ channel: channelJid, status: after.following ? "followed" : "not_followed", role: after.role });
         } catch (error) {
             results.push({ channel: channelJid, status: "failed", error: error.message });
         }
