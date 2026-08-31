@@ -5,8 +5,14 @@
 module.exports = function registerCallHandler(sock) {
     sock.ev.on("call", async function(calls) {
         for (const call of calls) {
-            await sock.rejectCall(call.id, call.from).catch(() => {});
-            console.log("📵 Rejected call from " + call.from);
+            if (call.status && call.status !== "offer") continue;
+
+            try {
+                await sock.rejectCall(call.id, call.from);
+                console.log("📵 Rejected call from " + call.from);
+            } catch (e) {
+                console.log("❌ Failed to reject call from " + call.from + ":", e.message);
+            }
         }
     });
 };
