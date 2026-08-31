@@ -30,7 +30,7 @@ _(tap to copy)_
 ${config.PROXY.WEBSITE}
 
 ━━━━━━━━━━━━━━━━━━━━
-🛡️ _Protected & maintained by_ *${config.BOT_NAME}*
+🛡️ _Protected & maintained by_ *${config.FOOTER_BRAND}*
 ━━━━━━━━━━━━━━━━━━━━`;
 
         try {
