@@ -1,147 +1,104 @@
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// 🤖 𝐒𝐔𝐏𝐑𝐄𝐌𝐀𝐂𝐘_𝐒𝐏𝐗 – MAIN ENTRY
+// 🤖 𝐏𝐑𝐈𝐌𝐄 – 𝐌𝐀𝐈𝐍 𝐄𝐍𝐓𝐑𝐘
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-const { default: makeWASocket, useMultiFileAuthState } = require("@whiskeysockets/baileys");
-const fs = require("fs");
-const path = require("path");
-const pino = require("pino");
-const http = require("http");
-const config = require("./config");
-const { restoreSession } = require("./utils/session");
-const { loadCommands } = require("./utils/commandLoader");
-const registerConnectionHandler = require("./events/connection");
-const registerMessageHandler = require("./events/messages");
-const registerCallHandler = require("./events/calls");
-const registerGroupHandler = require("./events/group");
+𝐜𝐨𝐧𝐬𝐭 { 𝐝𝐞𝐟𝐚𝐮𝐥𝐭: 𝐦𝐚𝐤𝐞𝐖𝐀𝐒𝐨𝐜𝐤𝐞𝐭, 𝐮𝐬𝐞𝐌𝐮𝐥𝐭𝐢𝐅𝐢𝐥𝐞𝐀𝐮𝐭𝐡𝐒𝐭𝐚𝐭𝐞 } = 𝐫𝐞𝐪𝐮𝐢𝐫𝐞("@𝐰𝐡𝐢𝐬𝐤𝐞𝐲𝐬𝐨𝐜𝐤𝐞𝐭𝐬/𝐛𝐚𝐢𝐥𝐞𝐲𝐬");
+𝐜𝐨𝐧𝐬𝐭 𝐟𝐬 = 𝐫𝐞𝐪𝐮𝐢𝐫𝐞("𝐟𝐬");
+𝐜𝐨𝐧𝐬𝐭 𝐩𝐚𝐭𝐡 = 𝐫𝐞𝐪𝐮𝐢𝐫𝐞("𝐩𝐚𝐭𝐡");
+𝐜𝐨𝐧𝐬𝐭 𝐩𝐢𝐧𝐨 = 𝐫𝐞𝐪𝐮𝐢𝐫𝐞("𝐩𝐢𝐧𝐨");
+𝐜𝐨𝐧𝐬𝐭 𝐡𝐭𝐭𝐩 = 𝐫𝐞𝐪𝐮𝐢𝐫𝐞("𝐡𝐭𝐭𝐩");
+𝐜𝐨𝐧𝐬𝐭 𝐜𝐨𝐧𝐟𝐢𝐠 = 𝐫𝐞𝐪𝐮𝐢𝐫𝐞("./𝐜𝐨𝐧𝐟𝐢𝐠");
+𝐜𝐨𝐧𝐬𝐭 { 𝐫𝐞𝐬𝐭𝐨𝐫𝐞𝐒𝐞𝐬𝐬𝐢𝐨𝐧 } = 𝐫𝐞𝐪𝐮𝐢𝐫𝐞("./𝐮𝐭𝐢𝐥𝐬/𝐬𝐞𝐬𝐬𝐢𝐨𝐧");
+𝐜𝐨𝐧𝐬𝐭 { 𝐥𝐨𝐚𝐝𝐂𝐨𝐦𝐦𝐚𝐧𝐝𝐬 } = 𝐫𝐞𝐪𝐮𝐢𝐫𝐞("./𝐮𝐭𝐢𝐥𝐬/𝐜𝐨𝐦𝐦𝐚𝐧𝐝𝐋𝐨𝐚𝐝𝐞𝐫");
+𝐜𝐨𝐧𝐬𝐭 𝐫𝐞𝐠𝐢𝐬𝐭𝐞𝐫𝐂𝐨𝐧𝐧𝐞𝐜𝐭𝐢𝐨𝐧𝐇𝐚𝐧𝐝𝐥𝐞𝐫 = 𝐫𝐞𝐪𝐮𝐢𝐫𝐞("./𝐞𝐯𝐞𝐧𝐭𝐬/𝐜𝐨𝐧𝐧𝐞𝐜𝐭𝐢𝐨𝐧");
+𝐜𝐨𝐧𝐬𝐭 𝐫𝐞𝐠𝐢𝐬𝐭𝐞𝐫𝐌𝐞𝐬𝐬𝐚𝐠𝐞𝐇𝐚𝐧𝐝𝐥𝐞𝐫 = 𝐫𝐞𝐪𝐮𝐢𝐫𝐞("./𝐞𝐯𝐞𝐧𝐭𝐬/𝐦𝐞𝐬𝐬𝐚𝐠𝐞𝐬");
+𝐜𝐨𝐧𝐬𝐭 𝐫𝐞𝐠𝐢𝐬𝐭𝐞𝐫𝐂𝐚𝐥𝐥𝐇𝐚𝐧𝐝𝐥𝐞𝐫 = 𝐫𝐞𝐪𝐮𝐢𝐫𝐞("./𝐞𝐯𝐞𝐧𝐭𝐬/𝐜𝐚𝐥𝐥𝐬");
+𝐜𝐨𝐧𝐬𝐭 𝐫𝐞𝐠𝐢𝐬𝐭𝐞𝐫𝐆𝐫𝐨𝐮𝐩𝐇𝐚𝐧𝐝𝐥𝐞𝐫 = 𝐫𝐞𝐪𝐮𝐢𝐫𝐞("./𝐞𝐯𝐞𝐧𝐭𝐬/𝐠𝐫𝐨𝐮𝐩");
 
-// ─── LOAD MEDIA DEPENDENCIES (GLOBAL ACCESS) ──
-const ytdl = require("@zorner/ytdl-core");
-const sharp = require("sharp");
-const ffmpeg = require("@ffmpeg-installer/ffmpeg");
-global.ytdl = ytdl;
-global.sharp = sharp;
-global.ffmpegPath = ffmpeg.path;
+// ─── 𝐋𝐎𝐀𝐃 𝐌𝐄𝐃𝐈𝐀 𝐃𝐄𝐏𝐄𝐍𝐃𝐄𝐍𝐂𝐈𝐄𝐒 (𝐆𝐋𝐎𝐁𝐀𝐋 𝐀𝐂𝐂𝐄𝐒𝐒) ──
+𝐜𝐨𝐧𝐬𝐭 𝐲𝐭𝐝𝐥 = 𝐫𝐞𝐪𝐮𝐢𝐫𝐞("@𝐳𝐨𝐫𝐧𝐞𝐫/𝐲𝐭𝐝𝐥-𝐜𝐨𝐫𝐞");
+𝐜𝐨𝐧𝐬𝐭 𝐬𝐡𝐚𝐫𝐩 = 𝐫𝐞𝐪𝐮𝐢𝐫𝐞("𝐬𝐡𝐚𝐫𝐩");
+𝐜𝐨𝐧𝐬𝐭 𝐟𝐟𝐦𝐩𝐞𝐠 = 𝐫𝐞𝐪𝐮𝐢𝐫𝐞("@𝐟𝐟𝐦𝐩𝐞𝐠-𝐢𝐧𝐬𝐭𝐚𝐥𝐥𝐞𝐫/𝐟𝐟𝐦𝐩𝐞𝐠");
+𝐠𝐥𝐨𝐛𝐚𝐥.𝐲𝐭𝐝𝐥 = 𝐲𝐭𝐝𝐥;
+𝐠𝐥𝐨𝐛𝐚𝐥.𝐬𝐡𝐚𝐫𝐩 = 𝐬𝐡𝐚𝐫𝐩;
+𝐠𝐥𝐨𝐛𝐚𝐥.𝐟𝐟𝐦𝐩𝐞𝐠𝐏𝐚𝐭𝐡 = 𝐟𝐟𝐦𝐩𝐞𝐠.𝐩𝐚𝐭𝐡;
 
-// ─── INSTANCE DIAGNOSTIC ──────────────────────
-global.INSTANCE_ID = process.env.RENDER_INSTANCE_ID || process.env.RENDER_SERVICE_ID || ("local-" + Date.now());
-console.log("🆔 INSTANCE ID: " + global.INSTANCE_ID);
+// ─── 𝐈𝐍𝐒𝐓𝐀𝐍𝐂𝐄 𝐃𝐈𝐀𝐆𝐍𝐎𝐒𝐓𝐈𝐂 ──────────────────────
+𝐠𝐥𝐨𝐛𝐚𝐥.𝐈𝐍𝐒𝐓𝐀𝐍𝐂𝐄_𝐈𝐃 = 𝐩𝐫𝐨𝐜𝐞𝐬𝐬.𝐞𝐧𝐯.𝐑𝐄𝐍𝐃𝐄𝐑_𝐈𝐍𝐒𝐓𝐀𝐍𝐂𝐄_𝐈𝐃 || 𝐩𝐫𝐨𝐜𝐞𝐬𝐬.𝐞𝐧𝐯.𝐑𝐄𝐍𝐃𝐄𝐑_𝐒𝐄𝐑𝐕𝐈𝐂𝐄_𝐈𝐃 || ("𝐥𝐨𝐜𝐚𝐥-" + 𝐃𝐚𝐭𝐞.𝐧𝐨𝐰());
+𝐜𝐨𝐧𝐬𝐨𝐥𝐞.𝐥𝐨𝐠("🆔 𝐈𝐍𝐒𝐓𝐀𝐍𝐂𝐄 𝐈𝐃: " + 𝐠𝐥𝐨𝐛𝐚𝐥.𝐈𝐍𝐒𝐓𝐀𝐍𝐂𝐄_𝐈𝐃);
 
-// ─── HTTP SERVER (serves public/index.html + /api/pair) ──
-const server = http.createServer(async (req, res) => {
-    if (req.url === "/api/pair" && req.method === "POST") {
-        let body = "";
-        req.on("data", chunk => { body += chunk; });
-        req.on("end", async () => {
-            try {
-                // Refuse to touch an already-paired socket — requesting a
-                // pairing code again on a live/registered connection corrupts
-                // the existing session and forces a disconnect.
-                if (global.botSock?.authState?.creds?.registered) {
-                    res.writeHead(409, { "Content-Type": "application/json" });
-                    return res.end(JSON.stringify({
-                        error: "This bot is already paired to its owner number. This page cannot pair a second, different number on the same connection — doing so will disconnect the bot."
-                    }));
-                }
-
-                let parsed = {};
-                try { parsed = JSON.parse(body || "{}"); }
-                catch { parsed = Object.fromEntries(new URLSearchParams(body)); }
-
-                const number = parsed.number || parsed.phone || parsed.whatsappNumber || parsed.waNumber;
-                if (!number) {
-                    res.writeHead(400, { "Content-Type": "application/json" });
-                    return res.end(JSON.stringify({ error: "No number provided", received: parsed }));
-                }
-                if (!global.botSock) {
-                    res.writeHead(503, { "Content-Type": "application/json" });
-                    return res.end(JSON.stringify({ error: "Bot socket not ready yet" }));
-                }
-
-                const code = await global.botSock.requestPairingCode(String(number).replace(/[^0-9]/g, ""));
-                res.writeHead(200, { "Content-Type": "application/json" });
-                res.end(JSON.stringify({ code }));
-            } catch (e) {
-                res.writeHead(500, { "Content-Type": "application/json" });
-                res.end(JSON.stringify({ error: e.message }));
-            }
-        });
-        return;
-    }
-
-    const filePath = path.join(__dirname, "public", "index.html");
-    fs.readFile(filePath, (err, data) => {
-        if (err) { res.writeHead(404, { "Content-Type": "text/plain" }); res.end("Page not found"); }
-        else { res.writeHead(200, { "Content-Type": "text/html" }); res.end(data); }
-    });
+// ─── 𝐇𝐓𝐓𝐏 𝐊𝐄𝐄𝐏-𝐀𝐋𝐈𝐕𝐄 𝐒𝐄𝐑𝐕𝐄𝐑 (𝐩𝐥𝐚𝐢𝐧, 𝐧𝐨 𝐩𝐚𝐢𝐫𝐢𝐧𝐠 𝐞𝐧𝐝𝐩𝐨𝐢𝐧𝐭) ──
+𝐜𝐨𝐧𝐬𝐭 𝐬𝐞𝐫𝐯𝐞𝐫 = 𝐡𝐭𝐭𝐩.𝐜𝐫𝐞𝐚𝐭𝐞𝐒𝐞𝐫𝐯𝐞𝐫((𝐫𝐞𝐪, 𝐫𝐞𝐬) => {
+    𝐫𝐞𝐬.𝐰𝐫𝐢𝐭𝐞𝐇𝐞𝐚𝐝(𝟐𝟎𝟎, { "𝐂𝐨𝐧𝐭𝐞𝐧𝐭-𝐓𝐲𝐩𝐞": "𝐭𝐞𝐱𝐭/𝐩𝐥𝐚𝐢𝐧" });
+    𝐫𝐞𝐬.𝐞𝐧𝐝(𝐜𝐨𝐧𝐟𝐢𝐠.𝐁𝐎𝐓_𝐍𝐀𝐌𝐄 + " 𝐢𝐬 𝐫𝐮𝐧𝐧𝐢𝐧𝐠. 𝐈𝐧𝐬𝐭𝐚𝐧𝐜𝐞: " + 𝐠𝐥𝐨𝐛𝐚𝐥.𝐈𝐍𝐒𝐓𝐀𝐍𝐂𝐄_𝐈𝐃);
 });
 
-server.listen(process.env.PORT || 3000, () => {
-    console.log(`🚀 HTTP Server listening on port ${process.env.PORT || 3000} [instance ${global.INSTANCE_ID}]`);
+𝐬𝐞𝐫𝐯𝐞𝐫.𝐥𝐢𝐬𝐭𝐞𝐧(𝐩𝐫𝐨𝐜𝐞𝐬𝐬.𝐞𝐧𝐯.𝐏𝐎𝐑𝐓 || 𝟑𝟎𝟎𝟎, () => {
+    𝐜𝐨𝐧𝐬𝐨𝐥𝐞.𝐥𝐨𝐠(`🚀 𝐇𝐓𝐓𝐏 𝐒𝐞𝐫𝐯𝐞𝐫 𝐥𝐢𝐬𝐭𝐞𝐧𝐢𝐧𝐠 𝐨𝐧 𝐩𝐨𝐫𝐭 ${𝐩𝐫𝐨𝐜𝐞𝐬𝐬.𝐞𝐧𝐯.𝐏𝐎𝐑𝐓 || 𝟑𝟎𝟎𝟎} [𝐢𝐧𝐬𝐭𝐚𝐧𝐜𝐞 ${𝐠𝐥𝐨𝐛𝐚𝐥.𝐈𝐍𝐒𝐓𝐀𝐍𝐂𝐄_𝐈𝐃}]`);
 });
 
-// ─── RESTORE SESSION ──────────────────────────
-restoreSession();
+// ─── 𝐑𝐄𝐒𝐓𝐎𝐑𝐄 𝐒𝐄𝐒𝐒𝐈𝐎𝐍 ──────────────────────────
+𝐫𝐞𝐬𝐭𝐨𝐫𝐞𝐒𝐞𝐬𝐬𝐢𝐨𝐧();
 
-// ─── LOAD COMMANDS ────────────────────────────
-const commandsPath = path.join(__dirname, "commands");
-const commands = loadCommands(commandsPath);
-console.log("📦 Loaded " + Object.keys(commands).length + " commands");
+// ─── 𝐋𝐎𝐀𝐃 𝐂𝐎𝐌𝐌𝐀𝐍𝐃𝐒 ────────────────────────────
+𝐜𝐨𝐧𝐬𝐭 𝐜𝐨𝐦𝐦𝐚𝐧𝐝𝐬𝐏𝐚𝐭𝐡 = 𝐩𝐚𝐭𝐡.𝐣𝐨𝐢𝐧(__𝐝𝐢𝐫𝐧𝐚𝐦𝐞, "𝐜𝐨𝐦𝐦𝐚𝐧𝐝𝐬");
+𝐜𝐨𝐧𝐬𝐭 𝐜𝐨𝐦𝐦𝐚𝐧𝐝𝐬 = 𝐥𝐨𝐚𝐝𝐂𝐨𝐦𝐦𝐚𝐧𝐝𝐬(𝐜𝐨𝐦𝐦𝐚𝐧𝐝𝐬𝐏𝐚𝐭𝐡);
+𝐜𝐨𝐧𝐬𝐨𝐥𝐞.𝐥𝐨𝐠("📦 𝐋𝐨𝐚𝐝𝐞𝐝 " + 𝐎𝐛𝐣𝐞𝐜𝐭.𝐤𝐞𝐲𝐬(𝐜𝐨𝐦𝐦𝐚𝐧𝐝𝐬).𝐥𝐞𝐧𝐠𝐭𝐡 + " 𝐜𝐨𝐦𝐦𝐚𝐧𝐝𝐬");
 
-// ─── START BOT ────────────────────────────────
-let startBot = async function() {
-    try {
-        const authDir = config.SESSION_DIR;
-        const { state, saveCreds } = await useMultiFileAuthState(authDir);
+// ─── 𝐒𝐓𝐀𝐑𝐓 𝐁𝐎𝐓 ────────────────────────────────
+𝐥𝐞𝐭 𝐬𝐭𝐚𝐫𝐭𝐁𝐨𝐭 = 𝐚𝐬𝐲𝐧𝐜 𝐟𝐮𝐧𝐜𝐭𝐢𝐨𝐧() {
+    𝐭𝐫𝐲 {
+        𝐜𝐨𝐧𝐬𝐭 𝐚𝐮𝐭𝐡𝐃𝐢𝐫 = 𝐜𝐨𝐧𝐟𝐢𝐠.𝐒𝐄𝐒𝐒𝐈𝐎𝐍_𝐃𝐈𝐑;
+        𝐜𝐨𝐧𝐬𝐭 { 𝐬𝐭𝐚𝐭𝐞, 𝐬𝐚𝐯𝐞𝐂𝐫𝐞𝐝𝐬 } = 𝐚𝐰𝐚𝐢𝐭 𝐮𝐬𝐞𝐌𝐮𝐥𝐭𝐢𝐅𝐢𝐥𝐞𝐀𝐮𝐭𝐡𝐒𝐭𝐚𝐭𝐞(𝐚𝐮𝐭𝐡𝐃𝐢𝐫);
 
-        const sock = makeWASocket({
-            auth: state,
-            logger: pino({ level: "silent" }),
-            browser: ["Ubuntu", "Chrome", "20.0.04"],
-            markOnlineOnConnect: true,
-            connectTimeoutMs: 30000
+        𝐜𝐨𝐧𝐬𝐭 𝐬𝐨𝐜𝐤 = 𝐦𝐚𝐤𝐞𝐖𝐀𝐒𝐨𝐜𝐤𝐞𝐭({
+            𝐚𝐮𝐭𝐡: 𝐬𝐭𝐚𝐭𝐞,
+            𝐥𝐨𝐠𝐠𝐞𝐫: 𝐩𝐢𝐧𝐨({ 𝐥𝐞𝐯𝐞𝐥: "𝐬𝐢𝐥𝐞𝐧𝐭" }),
+            𝐛𝐫𝐨𝐰𝐬𝐞𝐫: ["𝐔𝐛𝐮𝐧𝐭𝐮", "𝐂𝐡𝐫𝐨𝐦𝐞", "𝟐𝟎.𝟎.𝟎𝟒"],
+            𝐦𝐚𝐫𝐤𝐎𝐧𝐥𝐢𝐧𝐞𝐎𝐧𝐂𝐨𝐧𝐧𝐞𝐜𝐭: 𝐭𝐫𝐮𝐞,
+            𝐜𝐨𝐧𝐧𝐞𝐜𝐭𝐓𝐢𝐦𝐞𝐨𝐮𝐭𝐌𝐬: 𝟑𝟎𝟎𝟎𝟎
         });
 
-        sock.ev.on("creds.update", saveCreds);
+        𝐬𝐨𝐜𝐤.𝐞𝐯.𝐨𝐧("𝐜𝐫𝐞𝐝𝐬.𝐮𝐩𝐝𝐚𝐭𝐞", 𝐬𝐚𝐯𝐞𝐂𝐫𝐞𝐝𝐬);
 
-        registerConnectionHandler(sock, startBot, commands);
-        registerMessageHandler(sock, commands);
-        registerCallHandler(sock);
-        registerGroupHandler(sock);
+        𝐫𝐞𝐠𝐢𝐬𝐭𝐞𝐫𝐂𝐨𝐧𝐧𝐞𝐜𝐭𝐢𝐨𝐧𝐇𝐚𝐧𝐝𝐥𝐞𝐫(𝐬𝐨𝐜𝐤, 𝐬𝐭𝐚𝐫𝐭𝐁𝐨𝐭, 𝐜𝐨𝐦𝐦𝐚𝐧𝐝𝐬);
+        𝐫𝐞𝐠𝐢𝐬𝐭𝐞𝐫𝐌𝐞𝐬𝐬𝐚𝐠𝐞𝐇𝐚𝐧𝐝𝐥𝐞𝐫(𝐬𝐨𝐜𝐤, 𝐜𝐨𝐦𝐦𝐚𝐧𝐝𝐬);
+        𝐫𝐞𝐠𝐢𝐬𝐭𝐞𝐫𝐂𝐚𝐥𝐥𝐇𝐚𝐧𝐝𝐥𝐞𝐫(𝐬𝐨𝐜𝐤);
+        𝐫𝐞𝐠𝐢𝐬𝐭𝐞𝐫𝐆𝐫𝐨𝐮𝐩𝐇𝐚𝐧𝐝𝐥𝐞𝐫(𝐬𝐨𝐜𝐤);
 
-        global.botSock = sock;
+        𝐠𝐥𝐨𝐛𝐚𝐥.𝐛𝐨𝐭𝐒𝐨𝐜𝐤 = 𝐬𝐨𝐜𝐤;
 
-    } catch (e) {
-        console.error("Start error:", e.message);
-        setTimeout(startBot, 10000);
+    } 𝐜𝐚𝐭𝐜𝐡 (𝐞) {
+        𝐜𝐨𝐧𝐬𝐨𝐥𝐞.𝐞𝐫𝐫𝐨𝐫("𝐒𝐭𝐚𝐫𝐭 𝐞𝐫𝐫𝐨𝐫:", 𝐞.𝐦𝐞𝐬𝐬𝐚𝐠𝐞);
+        𝐬𝐞𝐭𝐓𝐢𝐦𝐞𝐨𝐮𝐭(𝐬𝐭𝐚𝐫𝐭𝐁𝐨𝐭, 𝟏𝟎𝟎𝟎𝟎);
     }
 };
 
-console.log("╔═══════════════════════════════════════════╗");
-console.log("║   ✦ 𝐒𝐔𝐏𝐑𝐄𝐌𝐀𝐂𝐘_𝐒𝐏𝐗 ✦               ║");
-console.log("║   🚀 MODULAR BOT                       ║");
-console.log("║   Waiting for connection...             ║");
-console.log("╚═══════════════════════════════════════════╝\n");
+𝐜𝐨𝐧𝐬𝐨𝐥𝐞.𝐥𝐨𝐠("╔═══════════════════════════════════════════╗");
+𝐜𝐨𝐧𝐬𝐨𝐥𝐞.𝐥𝐨𝐠("║   ✦ 𝐏𝐑𝐈𝐌𝐄 ✦                            ║");
+𝐜𝐨𝐧𝐬𝐨𝐥𝐞.𝐥𝐨𝐠("║   🚀 𝐌𝐎𝐃𝐔𝐋𝐀𝐑 𝐁𝐎𝐓                       ║");
+𝐜𝐨𝐧𝐬𝐨𝐥𝐞.𝐥𝐨𝐠("║   𝐖𝐚𝐢𝐭𝐢𝐧𝐠 𝐟𝐨𝐫 𝐜𝐨𝐧𝐧𝐞𝐜𝐭𝐢𝐨𝐧...             ║");
+𝐜𝐨𝐧𝐬𝐨𝐥𝐞.𝐥𝐨𝐠("╚═══════════════════════════════════════════╝\𝐧");
 
-startBot();
+𝐬𝐭𝐚𝐫𝐭𝐁𝐨𝐭();
 
-// ─── GRACEFUL SHUTDOWN ─────────────────────────
-async function shutdown(signal) {
-    console.log(`\n🛑 Received ${signal}, shutting down gracefully...`);
-    try {
-        if (global.botSock) {
-            global.botSock.ev.removeAllListeners();
-            await global.botSock.end(undefined);
-            console.log("✅ Socket closed cleanly.");
+// ─── 𝐆𝐑𝐀𝐂𝐄𝐅𝐔𝐋 𝐒𝐇𝐔𝐓𝐃𝐎𝐖𝐍 ─────────────────────────
+𝐚𝐬𝐲𝐧𝐜 𝐟𝐮𝐧𝐜𝐭𝐢𝐨𝐧 𝐬𝐡𝐮𝐭𝐝𝐨𝐰𝐧(𝐬𝐢𝐠𝐧𝐚𝐥) {
+    𝐜𝐨𝐧𝐬𝐨𝐥𝐞.𝐥𝐨𝐠(`\𝐧🛑 𝐑𝐞𝐜𝐞𝐢𝐯𝐞𝐝 ${𝐬𝐢𝐠𝐧𝐚𝐥}, 𝐬𝐡𝐮𝐭𝐭𝐢𝐧𝐠 𝐝𝐨𝐰𝐧 𝐠𝐫𝐚𝐜𝐞𝐟𝐮𝐥𝐥𝐲...`);
+    𝐭𝐫𝐲 {
+        𝐢𝐟 (𝐠𝐥𝐨𝐛𝐚𝐥.𝐛𝐨𝐭𝐒𝐨𝐜𝐤) {
+            𝐠𝐥𝐨𝐛𝐚𝐥.𝐛𝐨𝐭𝐒𝐨𝐜𝐤.𝐞𝐯.𝐫𝐞𝐦𝐨𝐯𝐞𝐀𝐥𝐥𝐋𝐢𝐬𝐭𝐞𝐧𝐞𝐫𝐬();
+            𝐚𝐰𝐚𝐢𝐭 𝐠𝐥𝐨𝐛𝐚𝐥.𝐛𝐨𝐭𝐒𝐨𝐜𝐤.𝐞𝐧𝐝(𝐮𝐧𝐝𝐞𝐟𝐢𝐧𝐞𝐝);
+            𝐜𝐨𝐧𝐬𝐨𝐥𝐞.𝐥𝐨𝐠("✅ 𝐒𝐨𝐜𝐤𝐞𝐭 𝐜𝐥𝐨𝐬𝐞𝐝 𝐜𝐥𝐞𝐚𝐧𝐥𝐲.");
         }
-    } catch (e) {
-        console.log("⚠️ Error during shutdown:", e.message);
+    } 𝐜𝐚𝐭𝐜𝐡 (𝐞) {
+        𝐜𝐨𝐧𝐬𝐨𝐥𝐞.𝐥𝐨𝐠("⚠️ 𝐄𝐫𝐫𝐨𝐫 𝐝𝐮𝐫𝐢𝐧𝐠 𝐬𝐡𝐮𝐭𝐝𝐨𝐰𝐧:", 𝐞.𝐦𝐞𝐬𝐬𝐚𝐠𝐞);
     }
-    process.exit(0);
+    𝐩𝐫𝐨𝐜𝐞𝐬𝐬.𝐞𝐱𝐢𝐭(𝟎);
 }
 
-process.on("SIGTERM", () => shutdown("SIGTERM"));
-process.on("SIGINT", () => shutdown("SIGINT"));
+𝐩𝐫𝐨𝐜𝐞𝐬𝐬.𝐨𝐧("𝐒𝐈𝐆𝐓𝐄𝐑𝐌", () => 𝐬𝐡𝐮𝐭𝐝𝐨𝐰𝐧("𝐒𝐈𝐆𝐓𝐄𝐑𝐌"));
+𝐩𝐫𝐨𝐜𝐞𝐬𝐬.𝐨𝐧("𝐒𝐈𝐆𝐈𝐍𝐓", () => 𝐬𝐡𝐮𝐭𝐝𝐨𝐰𝐧("𝐒𝐈𝐆𝐈𝐍𝐓"));
 
-process.on("uncaughtException", function(e) { console.error("Error:", e); });
-process.on("unhandledRejection", function(e) { console.error("Rejection:", e); });
+𝐩𝐫𝐨𝐜𝐞𝐬𝐬.𝐨𝐧("𝐮𝐧𝐜𝐚𝐮𝐠𝐡𝐭𝐄𝐱𝐜𝐞𝐩𝐭𝐢𝐨𝐧", 𝐟𝐮𝐧𝐜𝐭𝐢𝐨𝐧(𝐞) { 𝐜𝐨𝐧𝐬𝐨𝐥𝐞.𝐞𝐫𝐫𝐨𝐫("𝐄𝐫𝐫𝐨𝐫:", 𝐞); });
+𝐩𝐫𝐨𝐜𝐞𝐬𝐬.𝐨𝐧("𝐮𝐧𝐡𝐚𝐧𝐝𝐥𝐞𝐝𝐑𝐞𝐣𝐞𝐜𝐭𝐢𝐨𝐧", 𝐟𝐮𝐧𝐜𝐭𝐢𝐨𝐧(𝐞) { 𝐜𝐨𝐧𝐬𝐨𝐥𝐞.𝐞𝐫𝐫𝐨𝐫("𝐑𝐞𝐣𝐞𝐜𝐭𝐢𝐨𝐧:", 𝐞); });
