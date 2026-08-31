@@ -1,9 +1,15 @@
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// PROTECTION ENFORCEMENT (antilink, antispam, etc.)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 const { getGroupSettings } = require("../utils/groupSettings");
 const { addWarn, resetWarns, MAX_WARNS } = require("../utils/warnStore");
 const config = require("../config");
 
 const BAD_WORDS = [];
 const LINK_REGEX = /(https?:\/\/|www\.|chat\.whatsapp\.com|t\.me|wa\.me)/i;
+const MAX_TEXT_LENGTH = 3000;
+const MAX_MENTIONS = 30;
 const recentMessages = {};
 
 async function isSenderAdmin(sock, groupId, senderId) {
@@ -26,7 +32,7 @@ async function deleteMessage(sock, groupId, msg) {
 
 function buildWarningCard(label, sender, count) {
     const remaining = Math.max(0, MAX_WARNS - count);
-    return `✦𝕻𝖗𝖎𝖒𝖊_${config.BOT_NAME}✦\n\n` +
+    return `✦ ${config.FOOTER_BRAND} PROTECTION ✦\n\n` +
         `${label}\n\n` +
         `@${sender.split("@")[0]} Beware! ⚠️\n` +
         `Remaining warnings: ${remaining}\n` +
@@ -55,10 +61,46 @@ async function warn(sock, groupId, sender, text) {
     await sock.sendMessage(groupId, { text: text + ` @${sender.split("@")[0]}`, mentions: [sender] });
 }
 
+function isSuspiciousBug(content, body) {
+    if (body && body.length > MAX_TEXT_LENGTH) return "oversized text message";
+
+    const vcard = content?.contactMessage?.vcard || content?.contactsArrayMessage?.contacts?.[0]?.vcard;
+    if (vcard && (vcard.length > 5000 || (vcard.match(/\n/g) || []).length > 200)) {
+        return "malformed contact card";
+    }
+
+    const mentioned = content?.extendedTextMessage?.contextInfo?.mentionedJid || [];
+    if (mentioned.length > MAX_MENTIONS) return "mention flood";
+
+    let depth = 0;
+    let inner = content;
+    while (inner?.viewOnceMessage || inner?.ephemeralMessage || inner?.viewOnceMessageV2) {
+        inner = inner.viewOnceMessage?.message || inner.ephemeralMessage?.message || inner.viewOnceMessageV2?.message;
+        depth++;
+        if (depth > 4) return "suspicious nested message wrapper";
+    }
+
+    if (body) {
+        const controlCharCount = (body.match(/[\u202E\u202D\u200B\u200E\u200F\uFEFF]/g) || []).length;
+        if (controlCharCount > 20) return "malicious unicode control characters";
+    }
+
+    return null;
+}
+
 async function enforceProtection(sock, groupId, sender, msg, body, content) {
     const settings = getGroupSettings(groupId);
     if (!Object.values(settings).some(Boolean)) return false;
     if (await isSenderAdmin(sock, groupId, sender)) return false;
+
+    if (settings.antibug) {
+        const reason = isSuspiciousBug(content, body);
+        if (reason) {
+            await deleteMessage(sock, groupId, msg);
+            await warn(sock, groupId, sender, `🛡️ Blocked a bug/crash attempt (${reason}).`);
+            return true;
+        }
+    }
 
     if (settings.antilink && body && LINK_REGEX.test(body)) {
         await issueWarning(sock, groupId, sender, msg, "🔗 LINK DETECTED");
@@ -82,12 +124,8 @@ async function enforceProtection(sock, groupId, sender, msg, body, content) {
         return true;
     }
 
-    const isGif = !!content?.videoMessage?.gifPlayback;
-    if (settings.antigif && isGif) { await deleteMessage(sock, groupId, msg); await warn(sock, groupId, sender, "🎞️ GIFs aren't allowed here."); return true; }
-    if (settings.antivideo && content?.videoMessage && !isGif) { await deleteMessage(sock, groupId, msg); await warn(sock, groupId, sender, "🚫 Videos aren't allowed here."); return true; }
     if (settings.antiimage && content?.imageMessage) { await deleteMessage(sock, groupId, msg); await warn(sock, groupId, sender, "🚫 Images aren't allowed here."); return true; }
-    if (settings.antiaudio && content?.audioMessage) { await deleteMessage(sock, groupId, msg); await warn(sock, groupId, sender, "🚫 Audio isn't allowed here."); return true; }
-    if (settings.antidocument && content?.documentMessage) { await deleteMessage(sock, groupId, msg); await warn(sock, groupId, sender, "🚫 Documents aren't allowed here."); return true; }
+    if (settings.antivideo && content?.videoMessage) { await deleteMessage(sock, groupId, msg); await warn(sock, groupId, sender, "🚫 Videos aren't allowed here."); return true; }
     if (settings.antisticker && content?.stickerMessage) { await deleteMessage(sock, groupId, msg); await warn(sock, groupId, sender, "🚫 Stickers aren't allowed here."); return true; }
 
     if (settings.antispam) {
@@ -96,7 +134,11 @@ async function enforceProtection(sock, groupId, sender, msg, body, content) {
         const arr = (recentMessages[groupId][sender] || []).filter(t => now - t < 6000);
         arr.push(now);
         recentMessages[groupId][sender] = arr;
-        if (arr.length > 4) { await deleteMessage(sock, groupId, msg); await warn(sock, groupId, sender, "⚠️ Slow down — spam detected."); return true; }
+        if (arr.length > 4) {
+            await deleteMessage(sock, groupId, msg);
+            await warn(sock, groupId, sender, "⚠️ Slow down — spam detected.");
+            return true;
+        }
     }
 
     return false;
