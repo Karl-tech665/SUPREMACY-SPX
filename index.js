@@ -24,9 +24,9 @@ global.sharp = sharp;
 global.ffmpegPath = ffmpeg.path;
 
 // ─── INSTANCE DIAGNOSTIC ──────────────────────
-// Render sets these automatically. If you ever see TWO different
-// values show up in "CONNECTED AND ACTIVE" logs close together,
-// that's hard proof of a duplicate running service.
+// Render sets these automatically. If two different values ever show up
+// in "CONNECTED AND ACTIVE" logs close together, that's hard proof of a
+// duplicate running service.
 global.INSTANCE_ID = process.env.RENDER_INSTANCE_ID || process.env.RENDER_SERVICE_ID || ("local-" + Date.now());
 console.log("🆔 INSTANCE ID: " + global.INSTANCE_ID);
 
@@ -37,16 +37,20 @@ const server = http.createServer(async (req, res) => {
         req.on("data", chunk => { body += chunk; });
         req.on("end", async () => {
             try {
-                const { number } = JSON.parse(body || "{}");
+                let parsed = {};
+                try { parsed = JSON.parse(body || "{}"); }
+                catch { parsed = Object.fromEntries(new URLSearchParams(body)); }
+
+                const number = parsed.number || parsed.phone || parsed.whatsappNumber || parsed.waNumber;
                 if (!number) {
                     res.writeHead(400, { "Content-Type": "application/json" });
-                    return res.end(JSON.stringify({ error: "No number provided" }));
+                    return res.end(JSON.stringify({ error: "No number provided", received: parsed }));
                 }
                 if (!global.botSock) {
                     res.writeHead(503, { "Content-Type": "application/json" });
                     return res.end(JSON.stringify({ error: "Bot socket not ready yet" }));
                 }
-                const code = await global.botSock.requestPairingCode(number.replace(/[^0-9]/g, ""));
+                const code = await global.botSock.requestPairingCode(String(number).replace(/[^0-9]/g, ""));
                 res.writeHead(200, { "Content-Type": "application/json" });
                 res.end(JSON.stringify({ code }));
             } catch (e) {
@@ -112,6 +116,27 @@ console.log("║   Waiting for connection...             ║");
 console.log("╚═══════════════════════════════════════════╝\n");
 
 startBot();
+
+// ─── GRACEFUL SHUTDOWN ─────────────────────────
+// Ensures the WhatsApp socket closes cleanly before Render kills the
+// process on redeploy, instead of leaving a half-open connection that
+// can conflict with the next instance's fresh connection.
+async function shutdown(signal) {
+    console.log(`\n🛑 Received ${signal}, shutting down gracefully...`);
+    try {
+        if (global.botSock) {
+            global.botSock.ev.removeAllListeners();
+            await global.botSock.end(undefined);
+            console.log("✅ Socket closed cleanly.");
+        }
+    } catch (e) {
+        console.log("⚠️ Error during shutdown:", e.message);
+    }
+    process.exit(0);
+}
+
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));
 
 process.on("uncaughtException", function(e) { console.error("Error:", e); });
 process.on("unhandledRejection", function(e) { console.error("Rejection:", e); });
