@@ -1,7 +1,7 @@
 {
   "name": "supremacy-spx-bot",
-  "version": "6.0.0",
-  "description": "𝐒𝐔𝐏𝐑𝐄𝐌𝐀𝐂𝐘_𝐒𝐏𝐗 – Modular WhatsApp Bot",
+  "version": "7.0.0",
+  "description": "PRIME – Modular WhatsApp Bot",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
