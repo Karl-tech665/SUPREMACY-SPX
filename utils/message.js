@@ -1,5 +1,5 @@
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// STYLISH WHATSAPP MESSAGE (FIXED & SIMPLE)
+// STYLISH WHATSAPP MESSAGE
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 const { formatUptime, getRAMUsage, getSpeed } = require("./helpers");
@@ -14,33 +14,43 @@ async function sendStylishSuccessMessage(sock, userJid, commands) {
         const speed = getSpeed();
         const sessionId = getSessionId();
 
-        // Simple, clean formatting that never breaks
-        let message = `✦ 𝐒𝐔𝐏𝐑𝐄𝐌𝐀𝐂𝐘_𝐒𝐏𝐗 ✦
-✅ CONNECTED & ACTIVE
+        const divider = "─────────────────────────";
 
-📱 Connected : ${userJid}
-🤖 Bot Name  : ${config.BOT_NAME}
-📦 Commands  : ${cmdCount}
-⏱️ Uptime    : ${uptime}
-🧠 RAM       : ${ram.bar} ${ram.percent}%
-⚡ Speed     : ${speed}
-🛡️ Protection: Active
-🌐 Platform  : Render
+        let message = "✦ " + config.BOT_NAME + " ✦\n";
+        message += "*CONNECTED & ACTIVE*\n";
+        message += divider + "\n";
+        message += "📱 Connected : " + userJid + "\n";
+        message += "🤖 Bot Name  : " + config.BOT_NAME + "\n";
+        message += "📦 Commands  : " + cmdCount + "\n";
+        message += "⏱️ Uptime    : " + uptime + "\n";
+        message += "🧠 RAM       : " + ram.bar + " " + ram.percent + "%\n";
+        message += "⚡ Speed     : " + speed + "\n";
+        message += "🛡️ Protection: Active\n";
+        message += "🌐 Platform  : Render\n";
+        message += "🆔 Instance  : " + (global.INSTANCE_ID || "unknown") + "\n";
+        message += divider + "\n";
+        message += "💾 *SESSION_ID* (save for future deploys):\n";
 
-─ [ SESSION CREATED ] ─
-Name: ${config.BOT_NAME}
-By: ${config.OWNER_NAME}
-Status: ⏳ Waiting Deployment`;
+        if (sessionId) {
+            const truncatedId = sessionId.length > 80 ? sessionId.slice(0, 77) + "..." : sessionId;
+            message += "`" + truncatedId + "`\n";
+        } else {
+            message += "_(Session will be backed up automatically)_\n";
+        }
+
+        message += divider + "\n";
+        message += "⚠️ Keep it private — anyone with it can access your chats and impersonate you.\n";
+        message += divider + "\n";
+        message += "✦ 𝗣𝗢𝗪𝗘𝗥𝗘𝗗 𝗕𝗬 " + config.FOOTER_BRAND + " ✦";
 
         await sock.sendMessage(userJid, { text: message });
         console.log("📨 Stylish WhatsApp success message sent.");
 
-        // Send the RAW session ID right after, with no extra text
         if (sessionId && sessionId.length > 80) {
             await sock.sendMessage(userJid, {
-                text: sessionId
+                text: "📋 *Full SESSION_ID (copy this):*\n\n`" + sessionId + "`\n\n⚠️ Keep it private!"
             });
-            console.log("📨 Raw SESSION_ID sent separately.");
+            console.log("📨 Full SESSION_ID sent separately.");
         }
 
         return true;
