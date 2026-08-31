@@ -49,15 +49,16 @@ ${divider}
 🧠 RAM      : ${ram.bar} (${ram.percent}%)
 📦 Commands : ${cmdCount}
 ${divider}
-🌐 *PROXY*: .proxy — Get Supreme Prime Proxy
-🛡️ *PROTECTION*: antilink, antispam, antibug
-👑 *OWNER*: mode, setprefix, restart
+🌐 *PROXY*: .proxy — Get ${config.FOOTER_BRAND} Proxy
+🛡️ *PROTECTION*: antilink, antispam, antibug, antigroupmention
+👑 *OWNER*: setprefix, mode, setbotname, restart
 📥 *MEDIA*: tiktok, ig, fb, ytaudio, ytvideo
-🎮 *FUN*: joke, fact, quote, meme
+🎮 *FUN*: joke, fact, quote, meme, 8ball, truth, dare
+🕹️ *GAMES*: tictactoe, hangman
 🧠 *AI*: ai
 🐙 *REPO*: repo
 ${divider}
-✦ 𝗣𝗢𝗪𝗘𝗥𝗘𝗗 𝗕𝗬 ${config.BOT_NAME} ✦`;
+✦ 𝗣𝗢𝗪𝗘𝗥𝗘𝗗 𝗕𝗬 ${config.FOOTER_BRAND} ✦`;
 
         try {
             await sock.sendMessage(from, {
