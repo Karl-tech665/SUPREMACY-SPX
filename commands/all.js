@@ -1,9 +1,8 @@
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// EXTRA COMMANDS — general, fun, games, ai, sticker, media, admin, settings, profile
+// ALL COMMANDS — general, fun, games, ai, sticker, media, admin, settings, profile, broadcast
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 const axios = require("axios");
-const crypto = require("crypto"); // Added for UUID
 const config = require("../config");
 const { formatUptime, getRAMUsage } = require("../utils/helpers");
 const state = require("../utils/botSettings");
@@ -38,7 +37,7 @@ const HM_WORDS = ["javascript","whatsapp","elephant","keyboard","mountain","sand
 function renderWord(w,g){ return w.split("").map(l=>g.includes(l)?l:"_").join(" "); }
 
 module.exports = [
-    // ── YOUR EXISTING CODE (NO REMOVALS) ──
+    // ── GENERAL ──
     { name:"ping", async execute(sock,from){ const s=Date.now(); await sock.sendMessage(from,{text:"🏓 Pinging..."}); await sock.sendMessage(from,{text:"🏓 Pong! "+(Date.now()-s)+"ms"}); } },
     { name:"alive", async execute(sock,from){ await sock.sendMessage(from,{text:"✅ "+state.botName+" is alive!"}); } },
     { name:"owner", async execute(sock,from){ await sock.sendMessage(from,{text:"👑 "+config.OWNER_NAME+"\n📱 "+config.OWNER_NUMBER}); } },
@@ -137,48 +136,5 @@ module.exports = [
     { name:"unblock", async execute(sock,from,args,msg){ if(!isOwner(msg.key.participant||from)) return sock.sendMessage(from,{text:"❌ Owner only."}); const t=extractTarget(args,msg); if(!t) return sock.sendMessage(from,{text:"❌ Mention a user."}); await sock.updateBlockStatus(t,"unblock"); await sock.sendMessage(from,{text:"✅ Unblocked "+t}); } },
 
     // ── BROADCAST (owner-only) ──
-    { name:"broadcast", async execute(sock,from,args,msg){ const sender=msg.key.participant||from; if(!isOwner(sender)) return sock.sendMessage(from,{text:"❌ Owner only."}); const text=args.join(" "); if(!text) return sock.sendMessage(from,{text:"❌ .broadcast your message"}); try{ const chats=await sock.fetchAllChats(); let count=0; for(const chat of chats){ if(chat.id){ await sock.sendMessage(chat.id,{text}).catch(()=>{}); count++; } } await sock.sendMessage(from,{text:"✅ Broadcast sent to "+count+" chats."}); }catch(e){ await sock.sendMessage(from,{text:"❌ Broadcast failed: "+e.message}); } } },
-
-    // ══════════════════════════════════════════════════════
-    // ── ADDED COMMANDS (REAL LOGIC, NO SIMULATIONS) ──
-    // ══════════════════════════════════════════════════════
-
-    // ── ANIMATED MENU (Built-in animation logic) ──
-    { name:"menu", aliases:["help","cmds"], async execute(sock, from, args, msg, extra={}) {
-        const commands = extra.commands || {};
-        const cmdCount = Object.keys(commands).length;
-        const buildFrame = (pct, status) => {
-            const barLength = 20;
-            const filled = Math.round((pct / 100) * barLength);
-            const bar = "█".repeat(filled) + "░".repeat(barLength - filled);
-            return `🔄 *LOADING MENU...*\n\n✦ ${config.BOT_NAME} ✦\n\n${bar} ${pct}%\n${status}`;
-        };
-        const frames = [buildFrame(15, "⚡ Initializing System..."), buildFrame(40, "📂 Loading Command Modules..."), buildFrame(65, "🛡️ Loading Protection System..."), buildFrame(90, "🎨 Generating Interface..."), buildFrame(100, "✅ Menu Loaded!")];
-        let { key } = await sock.sendMessage(from, { text: frames[0] });
-        for (let i = 1; i < frames.length; i++) { await new Promise(r => setTimeout(r, 500)); await sock.sendMessage(from, { text: frames[i], edit: key }); }
-        const uptime = formatUptime(); const ram = getRAMUsage();
-        const finalMenu = `✦ ${config.BOT_NAME} ✦\n───────────────────────\n📌 Prefix : ${state.prefix}\n👑 Owner : ${config.OWNER_NAME}\n🔓 Mode : ${state.mode}\n🌐 Platform : Render\n⏱️ Uptime : ${uptime}\n🧠 RAM : ${ram.bar} (${ram.percent}%)\n📦 Commands : ${cmdCount}\n───────────────────────\n🌐 *PROXY*: .proxy\n🛡️ *PROTECTION*: antilink, antispam, antibug\n👑 *OWNER*: mode, setprefix, restart\n📥 *MEDIA*: tiktok, ig, fb, ytaudio, ytvideo\n🎮 *FUN*: joke, fact, quote, meme\n🧠 *AI*: ai\n🐙 *REPO*: repo\n───────────────────────\n✦ 𝗣𝗢𝗪𝗘𝗥𝗘𝗗 𝗕𝗬 ${config.BOT_NAME} ✦`;
-        try { await sock.sendMessage(from, { image: { url: config.MENU_IMAGE }, caption: finalMenu }); } catch(e) { console.log("❌ Menu: "+e.message); }
-    } },
-
-    // ── PROXY / REPO ──
-    { name:"proxy", async execute(sock,from){ await sock.sendMessage(from,{text:`🌐 Proxy Link:\n${config.PROXY.LINK}\n📱 More Proxies:\n${config.PROXY.WEBSITE}`}); } },
-    { name:"repo", async execute(sock,from){ await sock.sendMessage(from,{text:`🐙 Supreme_SPX Repo:\nhttps://github.com/Karl-tech665/SUPREMACY-SPX`}); } },
-
-    // ── PROTECTION TOGGLES ──
-    { name:"antibug", async execute(sock,from,args,msg){ if(!isOwner(msg.key.participant||from)) return sock.sendMessage(from,{text:"❌ Owner only."}); state.antibug=!state.antibug; await sock.sendMessage(from,{text:"🛡️ Antibug: "+(state.antibug?"ON":"OFF")}); } },
-    { name:"antilink", async execute(sock,from,args,msg){ if(!isOwner(msg.key.participant||from)) return sock.sendMessage(from,{text:"❌ Owner only."}); state.antilink=!state.antilink; await sock.sendMessage(from,{text:"🛡️ Antilink: "+(state.antilink?"ON":"OFF")}); } },
-    { name:"antispam", async execute(sock,from,args,msg){ if(!isOwner(msg.key.participant||from)) return sock.sendMessage(from,{text:"❌ Owner only."}); state.antispam=!state.antispam; await sock.sendMessage(from,{text:"🛡️ Antispam: "+(state.antispam?"ON":"OFF")}); } },
-
-    // ── REAL ANIME/IMAGE API COMMANDS (Nekos.best) ──
-    ...['neko', 'waifu', 'kitsune', 'fox', 'bunny', 'cat', 'dog', 'bird', 'shiba', 'hug', 'kiss', 'pat', 'slap', 'cuddle', 'kill', 'bite', 'cry', 'happy', 'sad', 'angry', 'shy', 'smug', 'pout', 'wave', 'highfive', 'nom', 'poke', 'tickle', 'punch', 'kick', 'bully', 'handhold', 'lewd', 'lick', 'love', 'nuzzle', 'peck', 'dance', 'clap', 'grin', 'laugh', 'stare', 'think', 'yeet', 'bonk', 'facepalm', 'glare', 'pray', 'scream', 'shoot', 'sip', 'spank', 'wasted', 'thumbsup', 'thumbsdown', 'good', 'bad'].map(name => ({ name, async execute(sock, from) { try { const res = await axios.get(`https://nekos.best/api/v2/${name}`); await sock.sendMessage(from, { image: { url: res.data.results[0].url }, caption: `✨ ${name}` }); } catch (e) { await sock.sendMessage(from, { text: `🤖 ${name} executed!` }); } } })),
-
-    // ── REAL TEXT TRANSFORMATIONS ──
-    ...['reverse', 'uppercase', 'lowercase', 'capitalize', 'binary', 'hex', 'base64', 'bold', 'italic', 'strike', 'upsidedown', 'morse', 'bubble', 'smallcaps', 'flip', 'vaporwave', 'leet', 'zalgo'].map(name => ({ name, async execute(sock, from, args) { if (!args.length) return sock.sendMessage(from, { text: `❌ .${name} text` }); const input = args.join(" "); let out = input; if (name === 'reverse') out = input.split('').reverse().join(''); else if (name === 'uppercase') out = input.toUpperCase(); else if (name === 'lowercase') out = input.toLowerCase(); else if (name === 'binary') out = input.split('').map(c => c.charCodeAt(0).toString(2)).join(' '); else if (name === 'hex') out = input.split('').map(c => c.charCodeAt(0).toString(16)).join(' '); else if (name === 'base64') out = Buffer.from(input).toString('base64'); else out = `✨ ${name}: ${input}`; await sock.sendMessage(from, { text: out }); } })),
-
-    // ── REAL RANDOM GENERATORS ──
-    ...['randomname', 'randomnumber', 'randomhex', 'randomuuid', 'randomip', 'randomcolor', 'randomword', 'randombool', 'randomemoji', 'randomadvice', 'randompassword', 'randomcard'].map(name => ({ name, async execute(sock, from) { let output; if (name === 'randomname') output = `Name: ${Math.random().toString(36).substring(2, 8)}`; else if (name === 'randomnumber') output = `Number: ${Math.floor(Math.random() * 1000000)}`; else if (name === 'randomhex') output = `Hex: #${Math.floor(Math.random()*16777215).toString(16)}`; else if (name === 'randomuuid') output = `UUID: ${crypto.randomUUID()}`; else if (name === 'randomip') output = `IP: ${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}`; else if (name === 'randomcolor') output = `Color: #${Math.floor(Math.random()*16777215).toString(16)}`; else if (name === 'randompassword') output = `Password: ${Math.random().toString(36).slice(-10)}`; else output = `✨ ${name}: ${Math.random().toString(36).substring(2, 10)}`; await sock.sendMessage(from, { text: output }); } })),
-
-    // ── REAL EXTRA FUN COMMANDS ──
-    ...['wouldyourather', 'dadjoke', 'devjoke', 'motivation', 'affirmation'].map(name => ({ name, async execute(sock, from) { let output = `✨ ${name}: ${Math.random().toString(36).substring(2, 10)}`; if (name === 'wouldyourather') output = `🤔 Would you rather: ${["Eat a bug or eat a spider?", "Never use the internet again or never eat pizza again?"][Math.floor(Math.random()*2)]}`; else if (name === 'motivation') output = `💪 Motivation: ${["Believe you can and you're halfway there.", "It does not matter how slowly you go as long as you do not stop."][Math.floor(Math.random()*2)]}`; else if (name === 'affirmation') output = `✨ Affirmation: ${["I am worthy of love and respect.", "I am in control of my happiness."][Math.floor(Math.random()*2)]}`; else if (name === 'dadjoke') output = `😆 Dad Joke: ${["Why don't scientists trust atoms? Because they make up everything!", "What do you call a fish with no eyes? Fsh!"][Math.floor(Math.random()*2)]}`; else if (name === 'devjoke') output = `💻 Dev Joke: ${["Why do programmers prefer dark mode? Light attracts bugs!", "There are only 10 types of people in the world: those who understand binary, and those who don't."][Math.floor(Math.random()*2)]}`; await sock.sendMessage(from, { text: output }); } }))
+    { name:"broadcast", async execute(sock,from,args,msg){ const sender=msg.key.participant||from; if(!isOwner(sender)) return sock.sendMessage(from,{text:"❌ Owner only."}); const text=args.join(" "); if(!text) return sock.sendMessage(from,{text:"❌ .broadcast your message"}); try{ const chats=await sock.fetchAllChats(); let count=0; for(const chat of chats){ if(chat.id){ await sock.sendMessage(chat.id,{text}).catch(()=>{}); count++; } } await sock.sendMessage(from,{text:"✅ Broadcast sent to "+count+" chats."}); }catch(e){ await sock.sendMessage(from,{text:"❌ Broadcast failed: "+e.message}); } } }
 ];
