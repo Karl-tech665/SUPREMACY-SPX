@@ -1,3 +1,7 @@
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// RUNTIME BOT SETTINGS (owner-changeable at runtime)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 const config = require("../config");
 
 module.exports = {
